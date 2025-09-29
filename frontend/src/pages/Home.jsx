@@ -33,6 +33,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import StockMarketTicker from "@/components/StockMarketTicker";
 import HeroCarousel from "@/components/HeroCarousel";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import RegistrationForm from "@/components/RegistrationForm";
 
 const Home = () => {
   const features = [
@@ -188,21 +196,24 @@ const Home = () => {
                 </div>
               </div>
 
-              {/* CTA */}
-              {/* CTA */}
+              {/* CTA with RegistrationForm Modal */}
               <div className="pt-4 animate-fadeInUp delay-1200">
-                <a
-                  href="https://chat.whatsapp.com/DU3aiu3CLy15dt6eVGW91K?mode=ac_t"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button
-                    size="lg"
-                    className="bg-white text-yellow-700 font-bold shadow-md hover:shadow-lg hover:bg-yellow-50 transition-all rounded-full px-8 py-4 text-base"
-                  >
-                    Register Now <ArrowRight className="ml-2 w-5 h-5" />
-                  </Button>
-                </a>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      size="lg"
+                      className="bg-white text-yellow-700 font-bold shadow-md hover:shadow-lg hover:bg-yellow-50 transition-all rounded-full px-8 py-4 text-base"
+                    >
+                      Register Now <ArrowRight className="ml-2 w-5 h-5" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-lg w-full">
+                    <DialogHeader>
+                      <DialogTitle>Register for Spelling Bee 2025</DialogTitle>
+                    </DialogHeader>
+                    <RegistrationForm />
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </div>
