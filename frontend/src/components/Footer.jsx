@@ -11,7 +11,7 @@ const Footer = () => {
           <div className="md:col-span-2">
             <div className="flex items-center space-x-3 mb-4">
               <img
-                src="/images/logo1.jpg"
+                src="/images/logo.jpg"
                 alt="Growvest Academy Logo"
                 className="h-12 w-12 rounded-full object-cover"
               />
