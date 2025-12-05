@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Calendar, User, Check } from "lucide-react";
+import { BookOpen, Calendar, User, Check, Star } from "lucide-react";
 import { toast } from "sonner";
 
 const Courses = () => {
@@ -297,184 +297,271 @@ const Courses = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-white">
-      <div className="section-padding py-16">
-        <div className="container-width">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Master New Skills with Expert Courses
-            </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Transform your career with our comprehensive courses designed for
-              practical learning and real-world application.
-            </p>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 py-10">
 
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-            {categories.map((category) => (
-              <Button
-                key={category.id}
-                variant={
-                  selectedCategory === category.id ? "default" : "outline"
-                }
-                onClick={() => handleCategoryChange(category.id)}
-                className={
-                  selectedCategory === category.id
-                    ? "btn-primary"
-                    : "btn-outline"
-                }
+<div className="mb-16">
+  <Card className="rounded-3xl shadow-xl border-0 overflow-hidden bg-white">
+    <div className="grid md:grid-cols-2 gap-0">
+
+      {/* LEFT SIDE - IMAGE */}
+      <div className="relative">
+        <img
+          src="/images/superkids.jpg"
+          alt="Super Kids Course"
+          className="w-full h-full object-cover"
+        />
+
+        {/* AGE LABEL */}
+        <div className="absolute bottom-4 left-4 bg-white px-4 py-2 rounded-xl shadow-lg font-semibold text-orange-600">
+          Ages 5–14 • Live + Recorded
+        </div>
+      </div>
+
+      {/* RIGHT SIDE - CONTENT */}
+      <div className="p-8 md:p-10 flex flex-col items-center text-center">
+
+        {/* ⭐ BADGES CENTERED HERE */}
+        <div className="flex justify-center flex-wrap gap-2 mb-4">
+          {["GK", "Phonics", "Spoken English", "Computer Basics"].map((t) => (
+            <Badge
+              key={t}
+              className="bg-orange-600 text-white px-3 py-1 rounded-lg shadow"
+            >
+              {t}
+            </Badge>
+          ))}
+        </div>
+
+        {/* TITLE */}
+        <h1 className="text-4xl md:text-5xl font-extrabold text-orange-600 leading-tight">
+          SUPER KIDS COURSE
+        </h1>
+
+        {/* SUBTEXT */}
+        <p className="text-gray-600 text-lg md:text-xl mt-3 max-w-md">
+          Build confidence, knowledge & skills with fun and structured learning.
+        </p>
+
+        {/* PRICE */}
+        <div className="mt-6">
+          <span className="text-2xl text-gray-400 line-through">₹999</span>
+          <p className="text-5xl font-black text-orange-500 mt-1">
+            ₹350 <span className="text-xl font-normal">/month</span>
+          </p>
+        </div>
+
+        {/* BENEFITS */}
+        <div className="mt-6 space-y-2 text-gray-700 text-base text-left w-full max-w-sm">
+          {[
+            "Daily fun-filled learning activities",
+            "Live + Recorded access",
+            "Progress tracking for parents",
+            "Designed for ages 5–14",
+          ].map((item, i) => (
+            <div key={i} className="flex items-center">
+              <Check className="text-green-600 mr-2" size={18} /> {item}
+            </div>
+          ))}
+        </div>
+
+        {/* BUTTON */}
+        <Button
+          size="lg"
+          className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-lg mt-8 py-6 rounded-xl shadow-lg"
+          onClick={() => {
+            toast.success("Joining WhatsApp group...");
+            setTimeout(
+              () =>
+                window.open(
+                  "https://chat.whatsapp.com/DU3aiu3CLy15dt6eVGW91K",
+                  "_blank"
+                ),
+              2000
+            );
+          }}
+        >
+          Enroll Now @ ₹350 Only!
+        </Button>
+
+      </div>
+    </div>
+  </Card>
+</div>
+
+
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Master New Skills with Expert Courses
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Transform your career with our comprehensive courses designed for
+            practical learning and real-world application.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap justify-center gap-4 mb-12">
+          {categories.map((category) => (
+            <Button
+              key={category.id}
+              variant={
+                selectedCategory === category.id ? "default" : "outline"
+              }
+              onClick={() => handleCategoryChange(category.id)}
+              className={
+                selectedCategory === category.id
+                  ? "btn-primary"
+                  : "btn-outline"
+              }
+            >
+              {category.name}
+            </Button>
+          ))}
+        </div>
+
+        <div
+          className={`grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16 transition-opacity duration-300 ${
+            isAnimating ? "opacity-50" : "opacity-100"
+          }`}
+        >
+          {filteredCourses.length > 0 ? (
+            filteredCourses.map((course) => (
+              <Card
+                key={`${course.id}-${selectedCategory}`}
+                className="hover:shadow-lg transition-all duration-300 hover:scale-105 overflow-hidden"
               >
-                {category.name}
-              </Button>
-            ))}
-          </div>
-          <div
-            className={`grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16 transition-opacity duration-300 ${
-              isAnimating ? "opacity-50" : "opacity-100"
-            }`}
-          >
-            {filteredCourses.length > 0 ? (
-              filteredCourses.map((course) => (
-                <Card
-                  key={`${course.id}-${selectedCategory}`}
-                  className="hover:shadow-lg transition-all duration-300 hover:scale-105 overflow-hidden"
-                >
-                  {/* Course Image */}
-                  <div className="relative h-48 overflow-hidden">
-                    <img
-                      src={course.image}
-                      alt={course.title}
-                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-                    />
-                    <div className="absolute top-4 left-4">
-                      <Badge className={getLevelColor(course.level)}>
-                        {course.level.charAt(0).toUpperCase() +
-                          course.level.slice(1)}
-                      </Badge>
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={course.image}
+                    alt={course.title}
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                  />
+                  <div className="absolute top-4 left-4">
+                    <Badge className={getLevelColor(course.level)}>
+                      {course.level.charAt(0).toUpperCase() +
+                        course.level.slice(1)}
+                    </Badge>
+                  </div>
+                  <div className="absolute top-4 right-4">
+                    <Badge className="bg-gradient-to-r from-green-600 to-green-400 text-white border-0">
+                      Premium
+                    </Badge>
+                  </div>
+                </div>
+
+                <CardHeader>
+                  <CardTitle className="text-xl mb-2">
+                    {course.title}
+                  </CardTitle>
+                  <p className="text-gray-600 text-sm">
+                    {course.description}
+                  </p>
+                </CardHeader>
+
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between text-sm text-gray-500">
+                      <div className="flex items-center">
+                        <Calendar size={16} className="mr-1" />
+                        {course.duration}
+                      </div>
+                      <div className="flex items-center">
+                        <BookOpen size={16} className="mr-1" />
+                        {course.lessons} lessons
+                      </div>
                     </div>
-                    <div className="absolute top-4 right-4">
-                      <Badge className="bg-gradient-to-r from-green-600 to-green-400 text-white border-0">
-                        Premium
-                      </Badge>
+
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-2">
+                        Topics Covered:
+                      </h4>
+                      <div className="space-y-1">
+                        {course.topics.map((topic, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center text-sm text-gray-600"
+                          >
+                            <Check
+                              size={14}
+                              className="text-green-600 mr-2 flex-shrink-0"
+                            />
+                            {topic}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-baseline space-x-2">
+                          {course.originalPrice && (
+                            <span className="text-gray-400 line-through text-lg">
+                              {course.originalPrice}
+                            </span>
+                          )}
+                          <span className="text-2xl font-bold text-primary">
+                            {course.price}
+                          </span>
+                        </div>
+                        <Button
+                          className="btn-primary"
+                          onClick={() => {
+                            toast.success(
+                              "Join our WhatsApp group to get the course!",
+                              {
+                                duration: 3000,
+                              }
+                            );
+                            setTimeout(() => {
+                              window.open(
+                                "https://chat.whatsapp.com/DU3aiu3CLy15dt6eVGW91K?mode=ac_t",
+                                "_blank"
+                              );
+                            }, 2000);
+                          }}
+                        >
+                          Enroll Now
+                        </Button>
+                      </div>
                     </div>
                   </div>
-
-                  <CardHeader>
-                    <CardTitle className="text-xl mb-2">
-                      {course.title}
-                    </CardTitle>
-                    <p className="text-gray-600 text-sm">
-                      {course.description}
-                    </p>
-                  </CardHeader>
-
-                  <CardContent>
-                    <div className="space-y-4">
-                      {/* Course Stats */}
-                      <div className="flex justify-between text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <Calendar size={16} className="mr-1" />
-                          {course.duration}
-                        </div>
-                        <div className="flex items-center">
-                          <BookOpen size={16} className="mr-1" />
-                          {course.lessons} lessons
-                        </div>
-                      </div>
-                      {/* Topics Covered */}
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-2">
-                          Topics Covered:
-                        </h4>
-                        <div className="space-y-1">
-                          {course.topics.map((topic, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center text-sm text-gray-600"
-                            >
-                              <Check
-                                size={14}
-                                className="text-green-600 mr-2 flex-shrink-0"
-                              />
-                              {topic}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Price and CTA */}
-                      <div className="pt-4 border-t">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-baseline space-x-2">
-                            {course.originalPrice && (
-                              <span className="text-gray-400 line-through text-lg">
-                                {course.originalPrice}
-                              </span>
-                            )}
-                            <span className="text-2xl font-bold text-primary">
-                              {course.price}
-                            </span>
-                          </div>
-                          <Button
-                            className="btn-primary"
-                            onClick={() => {
-                              toast.success(
-                                "Join our WhatsApp group to get the course!",
-                                {
-                                  duration: 3000,
-                                }
-                              );
-                              setTimeout(() => {
-                                window.open(
-                                  "https://chat.whatsapp.com/DU3aiu3CLy15dt6eVGW91K?mode=ac_t",
-                                  "_blank"
-                                );
-                              }, 2000);
-                            }}
-                          >
-                            Enroll Now
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <div className="col-span-full text-center py-16">
-                <p className="text-xl text-gray-500">
-                  No courses found for the selected category.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Bottom CTA */}
-          <div className="text-center">
-            <div className="bg-gradient-to-r from-green-600 to-green-400 rounded-2xl p-8 text-white">
-              <h2 className="text-3xl font-bold mb-4">
-                Ready to Start Your Learning Journey?
-              </h2>
-              <p className="text-xl text-green-100 mb-6 max-w-2xl mx-auto">
-                Join thousands of successful learners who have transformed their
-                careers through our courses.
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-16">
+              <p className="text-xl text-gray-500">
+                No courses found for the selected category.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button
-                  size="lg"
-                  variant="secondary"
-                  className="bg-white text-green-600 hover:bg-gray-100"
-                >
-                  View All Courses
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-white text-green-600 hover:bg-white hover:text-green-600"
-                >
-                  <User className="mr-2" size={20} />
-                  Get Started Today
-                </Button>
-              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="text-center">
+          <div className="bg-gradient-to-r from-green-600 to-green-400 rounded-2xl p-8 text-white">
+            <h2 className="text-3xl font-bold mb-4">
+              Ready to Start Your Learning Journey?
+            </h2>
+            <p className="text-xl text-green-100 mb-6 max-w-2xl mx-auto">
+              Join thousands of successful learners who have transformed their
+              careers through our courses.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                size="lg"
+                variant="secondary"
+                className="bg-white text-green-600 hover:bg-gray-100"
+              >
+                View All Courses
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-white text-green-600 hover:bg-white hover:text-green-600"
+              >
+                <User className="mr-2" size={20} />
+                Get Started Today
+              </Button>
             </div>
           </div>
         </div>
