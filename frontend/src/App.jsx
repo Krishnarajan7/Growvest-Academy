@@ -17,6 +17,7 @@ import SuperKids from "./pages/SuperKids";
 import SuperKidsTest from "./pages/SuperKidsTest";
 
 // Admin Pages
+import AdminLogin from "./pages/admin/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminStudents from "./pages/admin/Students";
 import AdminRevenue from "./pages/admin/Revenue";
@@ -24,6 +25,7 @@ import AdminMedia from "./pages/admin/Media";
 import AdminNotifications from "./pages/admin/Notifications";
 import AdminSettings from "./pages/admin/Settings";
 import AdminProfile from "./pages/admin/Profile";
+import AdminTestQuestions from "./pages/admin/TestQuestions";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +46,9 @@ const App = () => (
           <Route element={<Layout><Activities /></Layout>} path="/activities" />
           <Route element={<Layout><SuperKids /></Layout>} path="/super-kids" />
           <Route element={<Layout><SuperKidsTest /></Layout>} path="/super-kids/:categoryId" />
+
+          {/* Admin Login */}
+          <Route path="/admin/login" element={<AdminLogin />} />
           
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
@@ -51,6 +56,7 @@ const App = () => (
             <Route path="students" element={<AdminStudents />} />
             <Route path="revenue" element={<AdminRevenue />} />
             <Route path="media" element={<AdminMedia />} />
+            <Route path="questions" element={<AdminTestQuestions />} />
             <Route path="notifications" element={<AdminNotifications />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="profile" element={<AdminProfile />} />

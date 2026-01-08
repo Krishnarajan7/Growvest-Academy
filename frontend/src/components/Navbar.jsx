@@ -27,7 +27,6 @@ const Navbar = () => {
     { name: 'Super Kids', href: '/super-kids' },
     { name: 'Activities', href: '/activities' },
     { name: 'Team', href: '/team' },
-    { name: "Team", href: "/team" },
     { name: "Blog", href: "/blog" },
     { name: "Contact", href: "/contact" },
   ];
