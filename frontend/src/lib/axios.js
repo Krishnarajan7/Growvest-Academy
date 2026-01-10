@@ -222,6 +222,14 @@ export const adminApi = {
   createAgeGroup: (data) => api.post('/admin/questions/age-groups', data),
   updateAgeGroup: (id, data) => api.put(`/admin/questions/age-groups/${id}`, data),
   deleteAgeGroup: (id) => api.delete(`/admin/questions/age-groups/${id}`),
+
+
+  getStudentAnalyticsList: () => api.get('/admin/analytics/students/list'),
+  getStudentAnalyticsStats: () => api.get('/admin/analytics/students'),
+  getStudentCategoryPerformance: () => api.get('/admin/analytics/students/performance'),
+  getStudentAgeGroups: () => api.get('/admin/analytics/students/age-groups'),
+  getStudentMonthlyTrends: () => api.get('/admin/analytics/students/monthly-trends'),
+  getTopPerformers: () => api.get('/admin/analytics/students/top-performers'),
 };
 
 // Student API methods (if needed for frontend student portal)

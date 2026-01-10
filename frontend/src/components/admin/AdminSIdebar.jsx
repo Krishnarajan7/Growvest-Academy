@@ -70,6 +70,7 @@ const staggerVariants = {
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Students", url: "/admin/students", icon: Users },
+  { title: "Student Analytics", url: "/admin/analytics", icon: GraduationCap },
   { title: "Revenue", url: "/admin/revenue", icon: DollarSign },
   { title: "Media", url: "/admin/media", icon: Image },
   { title: "Test Questions", url: "/admin/questions", icon: FileQuestion },

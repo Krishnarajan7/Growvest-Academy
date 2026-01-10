@@ -26,6 +26,7 @@ import AdminNotifications from "./pages/admin/Notifications";
 import AdminSettings from "./pages/admin/Settings";
 import AdminProfile from "./pages/admin/Profile";
 import AdminTestQuestions from "./pages/admin/TestQuestions";
+import AdminStudentAnalytics from "./pages/admin/StudentAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => (
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="students" element={<AdminStudents />} />
+            <Route path="analytics" element={<AdminStudentAnalytics />} />
             <Route path="revenue" element={<AdminRevenue />} />
             <Route path="media" element={<AdminMedia />} />
             <Route path="questions" element={<AdminTestQuestions />} />
