@@ -44,52 +44,64 @@ class StudentController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'email' => 'required|email|unique:students,email',
-            'phone' => 'nullable|string|max:20',
-            'password' => 'required|string|min:8',
-            'confirm_password' => 'required|same:password',
-            'date_of_birth' => 'nullable|date',
-            'gender' => 'nullable|in:male,female,other',
-            'country' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'city' => 'nullable|string|max:100',
-            'address' => 'nullable|string',
-            'postal_code' => 'nullable|string|max:20',
-            'status' => 'nullable|in:active,inactive,suspended,graduated',
-            'account_type' => 'nullable|in:free,premium,enterprise',
-            'registration_source' => 'nullable|string',
-            'notes' => 'nullable|string'
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'first_name' => 'required|string|max:100',
+        'last_name' => 'required|string|max:100',
+        'username' => 'nullable|string|max:50|unique:students,username',
+        'email' => 'nullable|email|unique:students,email',
+        'parent_email' => 'nullable|email',
+        'parent_phone' => 'nullable|string|max:20',
+        'phone' => 'nullable|string|max:20',
+        'password' => 'nullable|string|min:6',
+        'confirm_password' => 'required_with:password|same:password',
+        'date_of_birth' => 'nullable|date',
+        'gender' => 'nullable|in:male,female,other',
+        'country' => 'nullable|string|max:100',
+        'state' => 'nullable|string|max:100',
+        'city' => 'nullable|string|max:100',
+        'address' => 'nullable|string',
+        'postal_code' => 'nullable|string|max:20',
+        'status' => 'nullable|in:active,inactive,suspended,graduated',
+        'account_type' => 'nullable|in:free,premium,enterprise',
+        'age_group' => 'required|in:6-8,9-11,12-14,15-16',
+        'notes' => 'nullable|string'
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $student = $this->studentService->createStudent($request->all());
-
-        ActivityLogService::log(
-            $request->user(),
-            'create',
-            'Created new student',
-            'Student',
-            $student->id,
-            ['email' => $student->email, 'name' => $student->full_name],
-            $request
-        );
-
+    if ($validator->fails()) {
         return response()->json([
-            'success' => true,
-            'message' => 'Student created successfully',
-            'data' => $student
-        ], 201);
+            'success' => false,
+            'errors' => $validator->errors()
+        ], 422);
     }
+
+    $studentService = new \App\Services\StudentService();
+    
+    $result = $studentService->createStudent($request->all(), $request->user());
+
+    ActivityLogService::log(
+        $request->user(),
+        'create',
+        'Created new student account',
+        'Student',
+        $result['student']->id,
+        [
+            'username' => $result['student']->username,
+            'student_code' => $result['student']->student_code,
+            'name' => $result['student']->full_name
+        ],
+        $request
+    );
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Student created successfully',
+        'data' => [
+            'student' => $result['student'],
+            'generated_password' => $result['generated_password']
+        ]
+    ], 201);
+}
 
     public function show(Request $request, $id)
     {
@@ -238,7 +250,104 @@ class StudentController extends Controller
             'data' => $student
         ]);
     }
+    
+    public function bulkCreate(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'students' => 'required|array|min:1',
+        'students.*.first_name' => 'required|string|max:100',
+        'students.*.last_name' => 'required|string|max:100',
+        'students.*.age_group' => 'required|in:6-8,9-11,12-14,15-16',
+        'students.*.parent_email' => 'nullable|email',
+        'students.*.parent_phone' => 'nullable|string|max:20',
+        'students.*.gender' => 'nullable|in:male,female,other',
+        'students.*.account_type' => 'nullable|in:free,premium,enterprise',
+        'students.*.status' => 'nullable|in:active,inactive,suspended'
+    ]);
 
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors' => $validator->errors()
+        ], 422);
+    }
+
+    $studentService = new \App\Services\StudentService();
+    
+    $results = $studentService->generateBulkStudents($request->students, $request->user());
+
+    ActivityLogService::log(
+        $request->user(),
+        'bulk_create',
+        'Bulk created student accounts',
+        'Student',
+        null,
+        [
+            'successful' => count($results['successful']),
+            'failed' => count($results['failed'])
+        ],
+        $request
+    );
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Bulk student creation completed',
+        'data' => $results
+    ]);
+}
+
+public function resetPassword(Request $request, $id)
+{
+    $student = Student::findOrFail($id);
+    
+    $studentService = new \App\Services\StudentService();
+    $newPassword = $studentService->resetStudentPassword($student, $request->new_password);
+
+    ActivityLogService::log(
+        $request->user(),
+        'reset_password',
+        'Reset student password',
+        'Student',
+        $student->id,
+        ['username' => $student->username],
+        $request
+    );
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Password reset successfully',
+        'data' => [
+            'new_password' => $newPassword,
+            'login_credentials' => [
+                'student_code' => $student->student_code,
+                'username' => $student->username
+            ]
+        ]
+    ]);
+}
+
+public function getLoginCredentials(Request $request, $id)
+{
+    $student = Student::findOrFail($id);
+    
+    $studentService = new \App\Services\StudentService();
+    $credentials = $studentService->generateLoginCredentials($student);
+
+    ActivityLogService::log(
+        $request->user(),
+        'get_credentials',
+        'Generated login credentials for student',
+        'Student',
+        $student->id,
+        ['username' => $student->username],
+        $request
+    );
+
+    return response()->json([
+        'success' => true,
+        'data' => $credentials
+    ]);
+} 
     public function bulkDelete(Request $request)
     {
         $request->validate([

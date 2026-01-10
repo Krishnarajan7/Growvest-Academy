@@ -16,9 +16,13 @@ class Student extends Authenticatable
 
     protected $fillable = [
         'student_id',
+        'student_code',
         'first_name',
         'last_name',
+        'username',
         'email',
+        'parent_email',
+        'parent_phone',
         'phone',
         'password',
         'date_of_birth',
@@ -32,6 +36,7 @@ class Student extends Authenticatable
         'status',
         'account_type',
         'registration_source',
+        'registration_type',
         'notes',
         'last_login_at',
         'last_login_ip'
@@ -49,6 +54,16 @@ class Student extends Authenticatable
         'last_login_at' => 'datetime',
     ];
 
+    public function ageGroup()
+{
+    return $this->belongsTo(AgeGroup::class);
+}
+    public function getAgeGroupNameAttribute()
+{
+    return optional($this->ageGroup)->name;
+}
+
+
     public function getFullNameAttribute()
     {
         return "{$this->first_name} {$this->last_name}";
@@ -57,6 +72,11 @@ class Student extends Authenticatable
     public function getAgeAttribute()
     {
         return $this->date_of_birth ? now()->diffInYears($this->date_of_birth) : null;
+    }
+
+    public function getLoginIdentifier()
+    {
+        return $this->username ?? $this->student_code;
     }
 
     public function isPremium()
@@ -79,8 +99,10 @@ class Student extends Authenticatable
         return $query->where(function ($q) use ($search) {
             $q->where('first_name', 'like', "%{$search}%")
               ->orWhere('last_name', 'like', "%{$search}%")
+              ->orWhere('username', 'like', "%{$search}%")
+              ->orWhere('student_code', 'like', "%{$search}%")
               ->orWhere('email', 'like', "%{$search}%")
-              ->orWhere('student_id', 'like', "%{$search}%")
+              ->orWhere('parent_email', 'like', "%{$search}%")
               ->orWhere('phone', 'like', "%{$search}%");
         });
     }

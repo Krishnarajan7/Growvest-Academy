@@ -13,38 +13,44 @@ class Test extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'test_id',
-        'title',
-        'slug',
-        'description',
-        'type',
-        'category',
-        'age_group',
-        'duration',
-        'total_questions',
-        'passing_score',
-        'max_attempts',
-        'price',
-        'is_free',
-        'is_active',
-        'start_date',
-        'end_date',
-        'settings',
-        'total_attempts',
-        'average_score',
-        'completion_rate'
-    ];
+    'test_id',
+    'title',
+    'slug',
+    'description',
+    'type',
+    'category',
+    'age_group',
+    'duration',
+    'total_questions',
+    'passing_score',
+    'max_attempts',
+    'price',
+    'is_free',
+    'is_active',
+    'start_date',
+    'end_date',
+    'settings',
+    'total_attempts',
+    'average_score',
+    'completion_rate',
+    'status'
+];
 
-    protected $casts = [
-        'price' => 'decimal:2',
-        'is_free' => 'boolean',
-        'is_active' => 'boolean',
-        'start_date' => 'datetime',
-        'end_date' => 'datetime',
-        'settings' => 'array',
-        'average_score' => 'decimal:2',
-        'completion_rate' => 'decimal:2'
-    ];
+protected $casts = [
+    'price' => 'decimal:2',
+    'is_free' => 'boolean',
+    'is_active' => 'boolean',
+    'start_date' => 'datetime',
+    'end_date' => 'datetime',
+    'settings' => 'array',
+    'average_score' => 'decimal:2',
+    'completion_rate' => 'decimal:2'
+];
+
+public function scopePublished($query)
+{
+    return $query->where('status', 'published');
+}
 
     public function questions(): BelongsToMany
     {
