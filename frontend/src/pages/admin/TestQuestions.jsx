@@ -30,12 +30,12 @@ import {
   Search,
   Upload,
   Download,
-  FileSpreadsheet,
   Loader2,
   Copy,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { adminApi } from "@/lib/axios";
+import { cn } from "@/lib/utils"; // Make sure you have this utility (common in shadcn/ui projects)
 
 export default function TestQuestions() {
   const [questions, setQuestions] = useState([]);
@@ -51,6 +51,8 @@ export default function TestQuestions() {
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
 
   const fileInputRef = useRef(null);
   const { toast } = useToast();
@@ -64,7 +66,7 @@ export default function TestQuestions() {
     option_b: "",
     option_c: "",
     option_d: "",
-    correct_answer: "a", // used only in frontend UI
+    correct_answer: "a",
     explanation: "",
     is_active: true,
   });
@@ -147,6 +149,84 @@ export default function TestQuestions() {
     loadQuestions();
   }, [searchTerm, filterCategory, filterAgeGroup, filterDifficulty]);
 
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file && file.type === "text/csv") {
+      setSelectedFile(file);
+    } else if (file) {
+      toast({
+        variant: "destructive",
+        title: "Invalid file type",
+        description: "Please select a .csv file",
+      });
+      setSelectedFile(null);
+    }
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type === "text/csv") {
+      setSelectedFile(file);
+    } else if (file) {
+      toast({
+        variant: "destructive",
+        title: "Invalid file type",
+        description: "Please drop a .csv file",
+      });
+    }
+  };
+
+  const handleBulkImport = async () => {
+  if (!selectedFile) {
+    toast({
+      variant: "destructive",
+      title: "No file selected",
+      description: "Please choose or drop a CSV file",
+    });
+    return;
+  }
+
+  setUploading(true);
+
+  try {
+    // ✅ PASS FILE DIRECTLY
+    await adminApi.importQuestions(selectedFile);
+
+    toast({
+      title: "Import successful",
+      description: "Questions have been imported from CSV",
+    });
+
+    setIsBulkImportOpen(false);
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    loadQuestions();
+  } catch (err) {
+    toast({
+      variant: "destructive",
+      title: "Import failed",
+      description: err.message || "Failed to process CSV file",
+    });
+  } finally {
+    setUploading(false);
+  }
+};
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -168,7 +248,6 @@ export default function TestQuestions() {
       return;
     }
 
-    // Prepare payload in the exact format backend expects
     const payload = {
       question: formData.question,
       category: formData.category,
@@ -177,42 +256,20 @@ export default function TestQuestions() {
       explanation: formData.explanation,
       is_active: formData.is_active,
       options: [
-        {
-          id: "a",
-          text: formData.option_a,
-          is_correct: formData.correct_answer === "a",
-        },
-        {
-          id: "b",
-          text: formData.option_b,
-          is_correct: formData.correct_answer === "b",
-        },
-        {
-          id: "c",
-          text: formData.option_c,
-          is_correct: formData.correct_answer === "c",
-        },
-        {
-          id: "d",
-          text: formData.option_d,
-          is_correct: formData.correct_answer === "d",
-        },
+        { id: "a", text: formData.option_a, is_correct: formData.correct_answer === "a" },
+        { id: "b", text: formData.option_b, is_correct: formData.correct_answer === "b" },
+        { id: "c", text: formData.option_c, is_correct: formData.correct_answer === "c" },
+        { id: "d", text: formData.option_d, is_correct: formData.correct_answer === "d" },
       ],
     };
 
     try {
       if (editingQuestion) {
         await adminApi.updateQuestion(editingQuestion.id, payload);
-        toast({
-          title: "Question updated",
-          description: "Changes saved successfully",
-        });
+        toast({ title: "Question updated" });
       } else {
         await adminApi.createQuestion(payload);
-        toast({
-          title: "Question created",
-          description: "New question added successfully",
-        });
+        toast({ title: "Question created" });
       }
 
       setIsDialogOpen(false);
@@ -288,43 +345,6 @@ export default function TestQuestions() {
     }
   };
 
-  const handleBulkImport = async () => {
-    const file = fileInputRef.current?.files?.[0];
-    if (!file) {
-      toast({
-        variant: "destructive",
-        title: "No file selected",
-        description: "Please choose a CSV file to upload",
-      });
-      return;
-    }
-
-    setUploading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("csv_file", file);
-
-      await adminApi.importQuestions(formData);
-
-      toast({
-        title: "Import successful",
-        description: "Questions have been imported from CSV",
-      });
-
-      setIsBulkImportOpen(false);
-      loadQuestions();
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Import failed",
-        description: err.response?.data?.message || "Failed to process CSV file",
-      });
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleDownloadTemplate = async () => {
     try {
       const res = await adminApi.downloadQuestionTemplate();
@@ -354,11 +374,7 @@ export default function TestQuestions() {
       document.body.appendChild(link);
       link.click();
       link.remove();
-
-      toast({
-        title: "Export successful",
-        description: "Questions have been exported to CSV",
-      });
+      toast({ title: "Export successful" });
     } catch (err) {
       toast({
         variant: "destructive",
@@ -414,33 +430,58 @@ export default function TestQuestions() {
                     Download Template CSV
                   </Button>
 
-                  <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                  <div
+                    className={cn(
+                      "border-2 border-dashed rounded-lg p-8 text-center transition-colors",
+                      dragActive
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50",
+                      selectedFile ? "bg-muted/40" : ""
+                    )}
+                    onDragEnter={handleDrag}
+                    onDragOver={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDrop={handleDrop}
+                  >
                     <input
                       ref={fileInputRef}
                       type="file"
                       accept=".csv"
                       className="hidden"
+                      onChange={handleFileChange}
                     />
+
+                    <div className="mx-auto w-16 h-16 mb-4 text-muted-foreground">
+                      {uploading ? (
+                        <Loader2 className="h-full w-full animate-spin" />
+                      ) : (
+                        <Upload className="h-full w-full" />
+                      )}
+                    </div>
+
+                    <p className="text-sm font-medium mb-1">
+                      {uploading
+                        ? "Uploading..."
+                        : dragActive
+                        ? "Drop CSV file here"
+                        : "Drag & drop CSV file here, or click to select"}
+                    </p>
+
+                    {selectedFile && !uploading && (
+                      <p className="text-xs text-green-600 mt-3 font-medium">
+                        Selected: {selectedFile.name}
+                      </p>
+                    )}
+
                     <Button
                       variant="secondary"
+                      size="sm"
+                      className="mt-4"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
                     >
-                      {uploading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Uploading...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="h-4 w-4 mr-2" />
-                          Select CSV File
-                        </>
-                      )}
+                      Select File
                     </Button>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Supported format: .csv
-                    </p>
                   </div>
                 </div>
 
@@ -448,26 +489,41 @@ export default function TestQuestions() {
                   <Button
                     variant="outline"
                     className="flex-1"
-                    onClick={() => setIsBulkImportOpen(false)}
+                    onClick={() => {
+                      setIsBulkImportOpen(false);
+                      setSelectedFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    disabled={uploading}
                   >
                     Cancel
                   </Button>
                   <Button
                     className="flex-1"
                     onClick={handleBulkImport}
-                    disabled={uploading || !fileInputRef.current?.files?.[0]}
+                    disabled={uploading || !selectedFile}
                   >
-                    {uploading ? "Importing..." : "Import Now"}
+                    {uploading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Importing...
+                      </>
+                    ) : (
+                      "Import Now"
+                    )}
                   </Button>
                 </div>
               </div>
             </DialogContent>
           </Dialog>
 
-          <Dialog open={isDialogOpen} onOpenChange={(open) => {
-            setIsDialogOpen(open);
-            if (!open) resetForm();
-          }}>
+          <Dialog
+            open={isDialogOpen}
+            onOpenChange={(open) => {
+              setIsDialogOpen(open);
+              if (!open) resetForm();
+            }}
+          >
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />

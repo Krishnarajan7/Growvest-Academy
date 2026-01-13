@@ -1,11 +1,12 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 import { 
   ArrowLeft, 
   ArrowRight, 
   Clock, 
-  CheckCircle, 
+  CheckCircle,  
   XCircle, 
   Trophy,
   Star,
@@ -17,12 +18,16 @@ import {
   Calculator,
   Monitor,
   Globe,
-  Megaphone
+  Megaphone,
+  Medal,
+  PartyPopper,
+  Crown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { api } from '@/lib/axios';
 
 const categoryConfig = {
   'spoken-english': {
@@ -31,13 +36,6 @@ const categoryConfig = {
     color: 'from-pink-500 to-rose-600',
     bgColor: 'bg-pink-50',
     emoji: '🎤',
-    questions: [
-      { q: 'What is the correct greeting for morning?', options: ['Good Night', 'Good Morning', 'Good Evening', 'Hello'], answer: 1 },
-      { q: 'Which word is a verb?', options: ['Beautiful', 'Run', 'Happy', 'Big'], answer: 1 },
-      { q: 'Complete: "I ___ to school everyday."', options: ['go', 'goes', 'going', 'went'], answer: 0 },
-      { q: 'What is the plural of "Child"?', options: ['Childs', 'Children', 'Childen', 'Childes'], answer: 1 },
-      { q: 'Which sentence is correct?', options: ['She are happy', 'She is happy', 'She am happy', 'She be happy'], answer: 1 },
-    ]
   },
   'physics': {
     title: 'Physics',
@@ -45,13 +43,6 @@ const categoryConfig = {
     color: 'from-blue-500 to-cyan-600',
     bgColor: 'bg-blue-50',
     emoji: '⚛️',
-    questions: [
-      { q: 'What is the SI unit of force?', options: ['Meter', 'Kilogram', 'Newton', 'Joule'], answer: 2 },
-      { q: 'What pulls objects towards Earth?', options: ['Magnetism', 'Gravity', 'Friction', 'Wind'], answer: 1 },
-      { q: 'What is the speed of light?', options: ['300 km/s', '3,000 km/s', '300,000 km/s', '3,000,000 km/s'], answer: 2 },
-      { q: 'Which color has the longest wavelength?', options: ['Blue', 'Green', 'Red', 'Violet'], answer: 2 },
-      { q: 'Water boils at what temperature?', options: ['50°C', '75°C', '100°C', '150°C'], answer: 2 },
-    ]
   },
   'general-maths': {
     title: 'General Maths',
@@ -59,13 +50,6 @@ const categoryConfig = {
     color: 'from-green-500 to-emerald-600',
     bgColor: 'bg-green-50',
     emoji: '🧮',
-    questions: [
-      { q: 'What is 15 × 8?', options: ['100', '120', '110', '130'], answer: 1 },
-      { q: 'What is 144 ÷ 12?', options: ['10', '11', '12', '13'], answer: 2 },
-      { q: 'What is 25% of 200?', options: ['25', '50', '75', '100'], answer: 1 },
-      { q: 'What is the square root of 81?', options: ['7', '8', '9', '10'], answer: 2 },
-      { q: 'What is 3³?', options: ['9', '12', '27', '81'], answer: 2 },
-    ]
   },
   'basic-computer': {
     title: 'Basic Computer',
@@ -73,13 +57,6 @@ const categoryConfig = {
     color: 'from-purple-500 to-violet-600',
     bgColor: 'bg-purple-50',
     emoji: '💻',
-    questions: [
-      { q: 'What does CPU stand for?', options: ['Central Processing Unit', 'Computer Personal Unit', 'Central Program Unit', 'Computer Processing Unit'], answer: 0 },
-      { q: 'Which is an input device?', options: ['Monitor', 'Printer', 'Keyboard', 'Speaker'], answer: 2 },
-      { q: 'What is the brain of the computer?', options: ['RAM', 'CPU', 'Hard Disk', 'Monitor'], answer: 1 },
-      { q: 'Which is used to store data permanently?', options: ['RAM', 'ROM', 'Hard Disk', 'CPU'], answer: 2 },
-      { q: 'What file extension is for images?', options: ['.doc', '.mp3', '.jpg', '.exe'], answer: 2 },
-    ]
   },
   'gk': {
     title: 'General Knowledge',
@@ -87,13 +64,6 @@ const categoryConfig = {
     color: 'from-orange-500 to-amber-600',
     bgColor: 'bg-orange-50',
     emoji: '🌍',
-    questions: [
-      { q: 'What is the capital of India?', options: ['Mumbai', 'New Delhi', 'Kolkata', 'Chennai'], answer: 1 },
-      { q: 'Which is the largest planet?', options: ['Earth', 'Mars', 'Jupiter', 'Saturn'], answer: 2 },
-      { q: 'Who invented the light bulb?', options: ['Newton', 'Einstein', 'Edison', 'Tesla'], answer: 2 },
-      { q: 'What is the national animal of India?', options: ['Lion', 'Tiger', 'Elephant', 'Peacock'], answer: 1 },
-      { q: 'How many continents are there?', options: ['5', '6', '7', '8'], answer: 2 },
-    ]
   },
   'public-speaking': {
     title: 'Public Speaking',
@@ -101,36 +71,151 @@ const categoryConfig = {
     color: 'from-red-500 to-orange-600',
     bgColor: 'bg-red-50',
     emoji: '🎯',
-    questions: [
-      { q: 'What should you maintain while speaking?', options: ['Low voice', 'Eye contact', 'Looking down', 'Speaking fast'], answer: 1 },
-      { q: 'How should you start a speech?', options: ['With a joke', 'By apologizing', 'With a greeting', 'By shouting'], answer: 2 },
-      { q: 'What helps reduce stage fear?', options: ['Avoiding practice', 'Practice and preparation', 'Speaking very fast', 'Looking at the floor'], answer: 1 },
-      { q: 'Body language is important in speaking. True or False?', options: ['True', 'False', 'Sometimes', 'Never'], answer: 0 },
-      { q: 'What makes a speech memorable?', options: ['Speaking too fast', 'Using stories and examples', 'Reading from paper', 'Avoiding the audience'], answer: 1 },
-    ]
   },
 };
 
+// Sound effects using Web Audio API
+const useSoundEffects = () => {
+  const audioContextRef = useRef(null);
+
+  const initAudio = useCallback(() => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioContextRef.current;
+  }, []);
+
+  const playSuccessSound = useCallback(() => {
+    const ctx = initAudio();
+    if (!ctx) return;
+
+    const playNote = (frequency, startTime, duration) => {
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(frequency, ctx.currentTime + startTime);
+      
+      gainNode.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gainNode.gain.linearRampToValueAtTime(0.3, ctx.currentTime + startTime + 0.05);
+      gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + startTime + duration);
+      
+      oscillator.start(ctx.currentTime + startTime);
+      oscillator.stop(ctx.currentTime + startTime + duration);
+    };
+
+    playNote(523.25, 0, 0.15);
+    playNote(659.25, 0.15, 0.15);
+    playNote(783.99, 0.3, 0.15);
+    playNote(1046.5, 0.45, 0.4);
+  }, [initAudio]);
+
+  const playFailSound = useCallback(() => {
+    const ctx = initAudio();
+    if (!ctx) return;
+
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    oscillator.type = 'triangle';
+    oscillator.frequency.setValueAtTime(200, ctx.currentTime);
+    oscillator.frequency.linearRampToValueAtTime(150, ctx.currentTime + 0.3);
+    
+    gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
+    
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.3);
+  }, [initAudio]);
+
+  const playClickSound = useCallback(() => {
+    const ctx = initAudio();
+    if (!ctx) return;
+
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+    
+    gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.08);
+    
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.08);
+  }, [initAudio]);
+
+  return { playSuccessSound, playFailSound, playClickSound };
+};
+
 const SuperKidsTest = () => {
-  const { categoryId } = useParams<{ categoryId};
+  const { categoryId } = useParams();
   const navigate = useNavigate();
+  const { playSuccessSound, playFailSound, playClickSound } = useSoundEffects();
   
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [answers, setAnswers] = useState([]);
   const [showResult, setShowResult] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
+  const [timeLeft, setTimeLeft] = useState(300);
   const [isAnswered, setIsAnswered] = useState(false);
+  const [studentData, setStudentData] = useState(null);
+  const resultConfettiTriggered = useRef(false);
+  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState(null);
 
   const config = categoryConfig[categoryId];
   
   useEffect(() => {
-    if (!config) {
-      navigate('/super-kids');
-      return;
+    const storedStudent = localStorage.getItem('student_data');
+    if (storedStudent) {
+      setStudentData(JSON.parse(storedStudent));
     }
-    setAnswers(new Array(config.questions.length).fill(null));
+  }, []);
+
+  useEffect(() => {
+    const loadQuestions = async () => {
+      try {
+        setLoading(true);
+
+        const res = await api.get(
+  `/student/questions/by-category/${categoryId}`
+);
+
+// api already returns response.data
+const fetchedQuestions = Array.isArray(res.data)
+  ? res.data
+  : [];
+
+console.log('Questions loaded:', fetchedQuestions);
+
+setQuestions(fetchedQuestions);
+setAnswers(new Array(fetchedQuestions.length).fill(null));
+
+
+      } catch (err) {
+        console.error('Error loading questions:', err);
+        navigate('/super-kids');
+      } finally {
+        setLoading(false);
+      }
+    
+    };
+
+    loadQuestions();
+
   }, [categoryId, config, navigate]);
+  
 
   useEffect(() => {
     if (showResult || timeLeft <= 0) return;
@@ -138,7 +223,7 @@ const SuperKidsTest = () => {
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          setShowResult(true);
+          finishTest();
           return 0;
         }
         return prev - 1;
@@ -148,11 +233,88 @@ const SuperKidsTest = () => {
     return () => clearInterval(timer);
   }, [showResult, timeLeft]);
 
-  if (!config) return null;
+  // Confetti on result
+  useEffect(() => {
+    if (showResult && !resultConfettiTriggered.current && result) {
+      resultConfettiTriggered.current = true;
+      const isPassed = result.is_passed;
+
+      if (isPassed) {
+        playSuccessSound();
+        const duration = 3000;
+        const animationEnd = Date.now() + duration;
+        const colors = ['#22c55e', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#ef4444', '#06b6d4'];
+
+        const frame = () => {
+          confetti({ particleCount: 7, angle: 60, spread: 55, origin: { x: 0 }, colors });
+          confetti({ particleCount: 7, angle: 120, spread: 55, origin: { x: 1 }, colors });
+          if (Date.now() < animationEnd) requestAnimationFrame(frame);
+        };
+
+        confetti({
+          particleCount: 150,
+          spread: 100,
+          origin: { y: 0.4 },
+          colors,
+          gravity: 0.6,
+          scalar: 1.4
+        });
+
+        setTimeout(frame, 300);
+        setTimeout(() => {
+          confetti({
+            particleCount: 50,
+            spread: 70,
+            origin: { y: 0.5, x: 0.5 },
+            shapes: ['star'],
+            colors: ['#fbbf24', '#f59e0b'],
+            scalar: 1.5
+          });
+        }, 600);
+      } else {
+        playFailSound();
+        confetti({
+          particleCount: 50,
+          spread: 60,
+          origin: { y: 0.5 },
+          colors: ['#8b5cf6', '#ec4899'],
+          gravity: 0.8
+        });
+      }
+    }
+  }, [showResult, result, playSuccessSound, playFailSound]);
+
+  useEffect(() => {
+  if (!config) {
+    navigate('/super-kids');
+  }
+}, [config, navigate]);
+
+if (!config) return null;
+
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading test...</div>;
+  }
+
+  // NEW: Guard against empty question list
+  if (!questions.length) {
+    return (
+      <div className="min-h-screen flex items-center justify-center flex-col gap-4">
+        <div className="text-2xl font-bold text-gray-700">No questions available</div>
+        <p className="text-gray-600">This category doesn't have any questions yet.</p>
+        <Link to="/super-kids">
+          <Button>Back to Categories</Button>
+        </Link>
+      </div>
+    );
+  }
 
   const Icon = config.icon;
-  const questions = config.questions;
-  const progress = ((currentQuestion + 1) / questions.length) * 100;
+  // NEW: Safe progress calculation (prevents division by zero)
+  const progress = questions.length 
+    ? ((currentQuestion + 1) / questions.length) * 100 
+    : 0;
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -160,28 +322,59 @@ const SuperKidsTest = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleAnswer = (optionIndex) => {
-    if (isAnswered) return;
-    
-    setSelectedAnswer(optionIndex);
-    setIsAnswered(true);
-    
-    const newAnswers = [...answers];
-    newAnswers[currentQuestion] = optionIndex;
-    setAnswers(newAnswers);
+  const calculateResult = () => {
+    let correct = 0;
+
+    questions.forEach((q, index) => {
+      if (answers[index] === q.correct_option) {
+        correct++;
+      }
+    });
+
+    const percentage = (correct / questions.length) * 100;
+    const is_passed = percentage >= 70; // You can adjust this threshold
+
+    return {
+      correct_answers: correct,
+      total_questions: questions.length,
+      result_summary: { percentage },
+      is_passed,
+    };
   };
 
+  const handleAnswer = (optionId) => {
+  if (isAnswered) return;
+
+  playClickSound();
+
+  console.log(
+    `%cQ${currentQuestion + 1} → Selected: ${optionId} | Correct: ${questions[currentQuestion]?.correct_option}`,
+    optionId === questions[currentQuestion]?.correct_option 
+      ? 'background:#28a745;color:white;padding:2px 6px;border-radius:4px;' 
+      : 'background:#dc3545;color:white;padding:2px 6px;border-radius:4px;'
+  );
+
+  setSelectedAnswer(optionId);
+  setIsAnswered(true);
+
+  const newAnswers = [...answers];
+  newAnswers[currentQuestion] = optionId;
+  setAnswers(newAnswers);
+};
+
   const nextQuestion = () => {
+    playClickSound();
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(prev => prev + 1);
-      setSelectedAnswer(null);
-      setIsAnswered(false);
+      setSelectedAnswer(answers[currentQuestion + 1]);
+      setIsAnswered(answers[currentQuestion + 1] !== null);
     } else {
-      setShowResult(true);
+      finishTest();
     }
   };
 
   const prevQuestion = () => {
+    playClickSound();
     if (currentQuestion > 0) {
       setCurrentQuestion(prev => prev - 1);
       setSelectedAnswer(answers[currentQuestion - 1]);
@@ -189,85 +382,187 @@ const SuperKidsTest = () => {
     }
   };
 
-  const calculateScore = () => {
-    return answers.reduce((score, answer, index) => {
-      return score + (answer === questions[index].answer ? 1 : 0);
-    }, 0);
-  };
-
   const restartTest = () => {
+    resultConfettiTriggered.current = false;
     setCurrentQuestion(0);
     setSelectedAnswer(null);
     setAnswers(new Array(questions.length).fill(null));
     setShowResult(false);
     setTimeLeft(300);
     setIsAnswered(false);
+    setResult(null);
+  };
+
+  const finishTest = () => {
+    setResult(calculateResult());
+    setShowResult(true);
   };
 
   if (showResult) {
-    const score = calculateScore();
-    const percentage = (score / questions.length) * 100;
-    const isPassed = percentage >= 60;
+    if (!result) {
+      return <div className="min-h-screen flex items-center justify-center">Loading results...</div>;
+    }
+
+    const score = result.correct_answers;
+    const total = result.total_questions;
+    const percentage = result.result_summary.percentage;
+    const isPassed = result.is_passed;
 
     return (
       <div className={`min-h-screen pt-20 ${config.bgColor}`}>
         <div className="container-width section-padding">
-          <Card className="max-w-2xl mx-auto border-4 border-dashed overflow-hidden">
-            <div className={`bg-gradient-to-r ${config.color} text-white p-8 text-center`}>
-              <div className="text-6xl mb-4">
-                {isPassed ? '🏆' : '💪'}
-              </div>
-              <h1 className="text-3xl font-black mb-2">
-                {isPassed ? 'Congratulations!' : 'Good Try!'}
-              </h1>
-              <p className="text-xl opacity-90">
-                {isPassed ? 'You did an amazing job!' : 'Keep practicing to improve!'}
-              </p>
-            </div>
-            
-            <CardContent className="p-8 text-center">
-              <div className="mb-8">
-                <div className="text-6xl font-black text-gray-800 mb-2">
-                  {score}/{questions.length}
-                </div>
-                <div className="text-xl text-gray-600">
-                  Your Score: <span className={isPassed ? 'text-green-600' : 'text-orange-600'} >{percentage.toFixed(0)}%</span>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap justify-center gap-4 mb-8">
-                {isPassed && (
-                  <Badge className="px-6 py-3 text-lg bg-yellow-500 text-white">
-                    <Star className="w-5 h-5 mr-2" />
-                    Star Performer!
-                  </Badge>
-                )}
-                <Badge className={`px-6 py-3 text-lg ${isPassed ? 'bg-green-500' : 'bg-orange-500'} text-white`}>
-                  {isPassed ? <CheckCircle className="w-5 h-5 mr-2" /> : <Sparkles className="w-5 h-5 mr-2" />}
-                  {isPassed ? 'Passed!' : 'Keep Going!'}
-                </Badge>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <Button 
-                  onClick={restartTest}
-                  variant="outline" 
-                  className="py-6 text-lg font-bold"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+          >
+            <Card className="max-w-2xl mx-auto border-4 border-dashed overflow-hidden">
+              <motion.div 
+                className={`bg-gradient-to-r ${config.color} text-white p-8 text-center relative overflow-hidden`}
+                initial={{ y: -50 }}
+                animate={{ y: 0 }}
+              >
+                {/* ... rest of result header remains the same ... */}
+                <motion.div 
+                  className="text-7xl mb-4 relative z-10"
+                  animate={isPassed ? { scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] } : {}}
+                  transition={{ duration: 1, repeat: isPassed ? Infinity : 0, repeatDelay: 2 }}
                 >
-                  <RotateCcw className="w-5 h-5 mr-2" />
-                  Try Again
-                </Button>
-                <Link to="/super-kids" className="w-full">
-                  <Button 
-                    className={`w-full py-6 text-lg font-bold bg-gradient-to-r ${config.color} text-white`}
+                  {isPassed ? (
+                    <span className="inline-flex items-center gap-2">
+                      <Trophy className="w-16 h-16 text-amber-300" />
+                    </span>
+                  ) : (
+                    <span>💪</span>
+                  )}
+                </motion.div>
+
+                {studentData && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="mb-2"
                   >
-                    <Home className="w-5 h-5 mr-2" />
-                    More Tests
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+                    <Badge className="bg-white/20 text-white px-4 py-2 text-sm">
+                      <Crown className="w-4 h-4 mr-2" />
+                      {studentData.name}
+                    </Badge>
+                  </motion.div>
+                )}
+
+                <motion.h1 
+                  className="text-3xl md:text-4xl font-black mb-2 relative z-10"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  {isPassed ? 'Congratulations!' : 'Good Try!'}
+                </motion.h1>
+                <motion.p 
+                  className="text-xl opacity-90 relative z-10"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  {isPassed ? 'You did an amazing job!' : 'Keep practicing to improve!'}
+                </motion.p>
+              </motion.div>
+              
+              <CardContent className="p-8 text-center">
+                {/* ... rest of the result content remains the same ... */}
+                <motion.div 
+                  className="mb-8"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', delay: 0.3, stiffness: 200 }}
+                >
+                  <div className="relative inline-block">
+                    <motion.div 
+                      className="text-7xl font-black text-gray-800 mb-2"
+                      animate={isPassed ? { scale: [1, 1.1, 1] } : {}}
+                      transition={{ duration: 0.5, repeat: isPassed ? 3 : 0 }}
+                    >
+                      {score}/{total}
+                    </motion.div>
+                    {isPassed && (
+                      <motion.div
+                        className="absolute -top-2 -right-6"
+                        initial={{ rotate: -30, opacity: 0 }}
+                        animate={{ rotate: 0, opacity: 1 }}
+                        transition={{ delay: 0.8 }}
+                      >
+                        <Star className="w-8 h-8 text-amber-500 fill-amber-500" />
+                      </motion.div>
+                    )}
+                  </div>
+                  <motion.div 
+                    className="text-xl text-gray-600"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    Your Score: <span className={`font-bold ${isPassed ? 'text-green-600' : 'text-orange-600'}`}>
+                      {percentage.toFixed(0)}%
+                    </span>
+                  </motion.div>
+                </motion.div>
+
+                {/* Badges and buttons remain the same */}
+                <motion.div 
+                  className="flex flex-wrap justify-center gap-4 mb-8"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  {isPassed && (
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Badge className="px-6 py-3 text-lg bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-lg">
+                        <Star className="w-5 h-5 mr-2 fill-white" />
+                        Star Performer!
+                      </Badge>
+                    </motion.div>
+                  )}
+                  <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                    <Badge className={`px-6 py-3 text-lg ${isPassed ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-orange-500 to-amber-500'} text-white shadow-lg`}>
+                      {isPassed ? <Medal className="w-5 h-5 mr-2" /> : <Sparkles className="w-5 h-5 mr-2" />}
+                      {isPassed ? 'Passed!' : 'Keep Going!'}
+                    </Badge>
+                  </motion.div>
+                  {isPassed && percentage === 100 && (
+                    <motion.div whileHover={{ scale: 1.1 }} initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.8 }}>
+                      <Badge className="px-6 py-3 text-lg bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg">
+                        <PartyPopper className="w-5 h-5 mr-2" />
+                        Perfect Score!
+                      </Badge>
+                    </motion.div>
+                  )}
+                </motion.div>
+
+                <motion.div 
+                  className="grid grid-cols-2 gap-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                >
+                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                    <Button onClick={restartTest} variant="outline" className="w-full py-6 text-lg font-bold">
+                      <RotateCcw className="w-5 h-5 mr-2" />
+                      Try Again
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                    <Link to="/super-kids" className="w-full block">
+                      <Button className={`w-full py-6 text-lg font-bold bg-gradient-to-r ${config.color} text-white`}>
+                        <Home className="w-5 h-5 mr-2" />
+                        More Tests
+                      </Button>
+                    </Link>
+                  </motion.div>
+                </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </div>
     );
@@ -277,124 +572,198 @@ const SuperKidsTest = () => {
     <div className={`min-h-screen pt-20 ${config.bgColor}`}>
       <div className="container-width section-padding">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <motion.div 
+          className="flex items-center justify-between mb-6"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
           <Link to="/super-kids" className="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
             <ArrowLeft className="w-5 h-5 mr-2" />
             Back to Categories
           </Link>
-          <div className={`flex items-center space-x-2 px-4 py-2 rounded-full ${timeLeft < 60 ? 'bg-red-100 text-red-600' : 'bg-white'}`}>
+          <motion.div 
+            className={`flex items-center space-x-2 px-4 py-2 rounded-full ${timeLeft < 60 ? 'bg-red-100 text-red-600' : 'bg-white'}`}
+            animate={timeLeft < 60 ? { scale: [1, 1.05, 1] } : {}}
+            transition={{ duration: 0.5, repeat: timeLeft < 60 ? Infinity : 0 }}
+          >
             <Clock className={`w-5 h-5 ${timeLeft < 60 ? 'animate-pulse' : ''}`} />
             <span className="font-bold">{formatTime(timeLeft)}</span>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
+
+        {/* Student Info */}
+        {studentData && (
+          <motion.div 
+            className="mb-4 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <Badge className="bg-white px-4 py-2 text-gray-700 shadow-sm">
+              <Crown className="w-4 h-4 mr-2 text-amber-500" />
+              Playing as: <span className="font-bold ml-1">{studentData.name}</span>
+            </Badge>
+          </motion.div>
+        )}
 
         {/* Test Card */}
-        <Card className="max-w-3xl mx-auto border-4 border-dashed overflow-hidden">
-          {/* Category Header */}
-          <div className={`bg-gradient-to-r ${config.color} text-white p-6`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Icon className="w-6 h-6" />
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="max-w-3xl mx-auto border-4 border-dashed overflow-hidden">
+            {/* Category Header */}
+            <div className={`bg-gradient-to-r ${config.color} text-white p-6`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <motion.div 
+                    className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"
+                    whileHover={{ rotate: 10, scale: 1.1 }}
+                  >
+                    <Icon className="w-6 h-6" />
+                  </motion.div>
+                  <div>
+                    <h2 className="text-xl font-bold">{config.title}</h2>
+                    <p className="opacity-90">Question {currentQuestion + 1} of {questions.length}</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold">{config.title}</h2>
-                  <p className="opacity-90">Question {currentQuestion + 1} of {questions.length}</p>
-                </div>
+                <motion.div 
+                  className="text-4xl"
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  {config.emoji}
+                </motion.div>
               </div>
-              <div className="text-4xl">{config.emoji}</div>
+              <Progress value={progress} className="mt-4 bg-white/30" />
             </div>
-            <Progress value={progress} className="mt-4 bg-white/30" />
-          </div>
 
-          <CardContent className="p-6 md:p-8">
-            {/* Question */}
-            <div className="mb-8">
-              <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-6">
-                {questions[currentQuestion].q}
-              </h3>
+            <CardContent className="p-6 md:p-8">
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={currentQuestion}
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  className="mb-8"
+                >
+                  <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-6">
+                    {questions[currentQuestion].question}
+                  </h3>
 
-              {/* Options */}
-              <div className="grid gap-4">
-                {questions[currentQuestion].options.map((option, index) => {
-                  const isSelected = selectedAnswer === index;
-                  const isCorrect = index === questions[currentQuestion].answer;
-                  const showCorrect = isAnswered && isCorrect;
-                  const showWrong = isAnswered && isSelected && !isCorrect;
+                  <div className="grid gap-4">
+                    {questions[currentQuestion].options.map((option, index) => {
+                      const isSelected = selectedAnswer === option.id;
+                      const showCorrect = isAnswered && isSelected && (selectedAnswer === questions[currentQuestion].correct_option);
+                      const showWrong = isAnswered && isSelected && (selectedAnswer !== questions[currentQuestion].correct_option);
 
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => handleAnswer(index)}
-                      disabled={isAnswered}
-                      className={`w-full p-4 md:p-5 rounded-xl text-left font-medium text-lg transition-all duration-300 border-3 ${
-                        showCorrect
-                          ? 'bg-green-100 border-green-500 text-green-700'
-                          : showWrong
-                          ? 'bg-red-100 border-red-500 text-red-700'
-                          : isSelected
-                          ? 'bg-purple-100 border-purple-500 text-purple-700'
-                          : 'bg-white border-gray-200 hover:border-purple-300 hover:bg-purple-50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>{option}</span>
-                        {showCorrect && <CheckCircle className="w-6 h-6 text-green-600" />}
-                        {showWrong && <XCircle className="w-6 h-6 text-red-600" />}
-                      </div>
-                    </button>
-                  );
-                })}
+                      return (
+                        <motion.button
+                          key={option.id}
+                          onClick={() => handleAnswer(option.id)}
+                          disabled={isAnswered}
+                          whileHover={!isAnswered ? { scale: 1.02, x: 5 } : {}}
+                          whileTap={!isAnswered ? { scale: 0.98 } : {}}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className={`w-full p-4 md:p-5 rounded-xl text-left font-medium text-lg transition-all duration-300 border-3 ${
+                            showCorrect
+                              ? 'bg-green-100 border-green-500 text-green-700'
+                              : showWrong
+                              ? 'bg-red-100 border-red-500 text-red-700'
+                              : isSelected
+                              ? 'bg-purple-100 border-purple-500 text-purple-700'
+                              : 'bg-white border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span>{option.text}</span>
+                            {showCorrect && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: 'spring', stiffness: 500 }}
+                              >
+                                <CheckCircle className="w-6 h-6 text-green-600" />
+                              </motion.div>
+                            )}
+                            {showWrong && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: 'spring', stiffness: 500 }}
+                              >
+                                <XCircle className="w-6 h-6 text-red-600" />
+                              </motion.div>
+                            )}
+                          </div>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+
+              <div className="flex justify-between">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    onClick={prevQuestion}
+                    disabled={currentQuestion === 0}
+                    variant="outline"
+                    className="px-6"
+                  >
+                    <ArrowLeft className="w-5 h-5 mr-2" />
+                    Previous
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    onClick={nextQuestion}
+                    disabled={!isAnswered}
+                    className={`px-6 bg-gradient-to-r ${config.color} text-white`}
+                  >
+                    {currentQuestion === questions.length - 1 ? 'Finish' : 'Next'}
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                </motion.div>
               </div>
-            </div>
-
-            {/* Navigation */}
-            <div className="flex justify-between">
-              <Button
-                onClick={prevQuestion}
-                disabled={currentQuestion === 0}
-                variant="outline"
-                className="px-6"
-              >
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                Previous
-              </Button>
-              <Button
-                onClick={nextQuestion}
-                disabled={!isAnswered}
-                className={`px-6 bg-gradient-to-r ${config.color} text-white`}
-              >
-                {currentQuestion === questions.length - 1 ? 'Finish' : 'Next'}
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Question Navigator */}
-        <div className="max-w-3xl mx-auto mt-6">
+        <motion.div 
+          className="max-w-3xl mx-auto mt-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
           <div className="flex flex-wrap justify-center gap-2">
             {questions.map((_, index) => (
-              <button
+              <motion.button
                 key={index}
                 onClick={() => {
+                  playClickSound();
                   setCurrentQuestion(index);
                   setSelectedAnswer(answers[index]);
                   setIsAnswered(answers[index] !== null);
                 }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 className={`w-10 h-10 rounded-full font-bold transition-all ${
                   index === currentQuestion
-                    ? `bg-gradient-to-r ${config.color} text-white`
+                    ? `bg-gradient-to-r ${config.color} text-white shadow-lg`
                     : answers[index] !== null
                     ? 'bg-green-100 text-green-700 border-2 border-green-500'
                     : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300'
                 }`}
               >
                 {index + 1}
-              </button>
+              </motion.button>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
