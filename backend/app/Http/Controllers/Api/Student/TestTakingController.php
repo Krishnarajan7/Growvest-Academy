@@ -5,6 +5,11 @@ namespace App\Http\Controllers\Api\Student;
 use App\Http\Controllers\Controller;
 use App\Services\TestTakingService;
 use Illuminate\Http\Request;
+use App\Models\Test;
+use App\Models\Question;
+
+use App\Models\QuestionCategory;
+use App\Models\TestAttempt;
 use Illuminate\Support\Facades\Validator;
 
 class TestTakingController extends Controller
@@ -180,4 +185,43 @@ class TestTakingController extends Controller
             'data' => $result
         ]);
     }
+    public function getTestByCategory(string $slug)
+{
+    $questions = Question::where('category', $slug)
+        ->where('is_active', true)
+        ->get()
+        ->map(function ($q) {
+
+            $correctOption = null;
+
+            // options is stored as JSON
+            $rawOptions = is_string($q->options)
+                ? json_decode($q->options, true)
+                : $q->options;
+
+            $options = collect($rawOptions)->map(function ($opt) use (&$correctOption) {
+
+                if (!empty($opt['is_correct'])) {
+                    $correctOption = $opt['id']; // a / b / c / d
+                }
+
+                return [
+                    'id' => $opt['id'],
+                    'text' => $opt['text'],
+                ];
+            })->values();
+
+            return [
+                'id' => $q->id,
+                'question' => $q->question,
+                'options' => $options,
+
+                // ✅ THIS IS WHAT FRONTEND NEEDS
+                'correct_option' => $correctOption,
+            ];
+        });
+
+    return response()->json($questions);
+}
+
 }

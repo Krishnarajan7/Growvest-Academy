@@ -311,52 +311,40 @@ class QuestionController extends Controller
     }
 
     public function import(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'csv_data' => 'required|string',
-            'file_type' => 'sometimes|in:csv,json'
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'csv_file' => 'required|file'
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        try {
-            $result = $this->questionService->importFromCsv($request->csv_data, $request->user());
-
-            ActivityLogService::log(
-                $request->user(),
-                'import',
-                'Imported questions from CSV',
-                'Question',
-                null,
-                ['imported' => $result['imported'], 'failed' => $result['failed']],
-                $request
-            );
-
-            $response = [
-                'success' => true,
-                'message' => "Import completed: {$result['imported']} imported, {$result['failed']} failed",
-                'imported' => $result['imported'],
-                'failed' => $result['failed']
-            ];
-
-            if (!empty($result['errors'])) {
-                $response['errors'] = $result['errors'];
-            }
-
-            return response()->json($response);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Import failed: ' . $e->getMessage()
-            ], 400);
-        }
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors' => $validator->errors()
+        ], 422);
     }
+
+    try {
+        $file = $request->file('csv_file');
+        $csvData = file_get_contents($file->getRealPath());
+
+        $result = $this->questionService->importFromCsv(
+            $csvData,
+            $request->user()
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => "Imported {$result['imported']} questions",
+            'data' => $result
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Import failed: ' . $e->getMessage()
+        ], 400);
+    }
+}
+
 
     public function export(Request $request)
     {
@@ -489,4 +477,28 @@ class QuestionController extends Controller
             ]
         ]);
     }
+
+    public function getSuperKidsCategories()
+{
+    $categories = Question::select(
+            'category as slug',
+            \DB::raw('COUNT(*) as question_count')
+        )
+        ->where('is_active', true)
+        ->groupBy('category')
+        ->orderBy('category')
+        ->get()
+        ->map(function ($cat) {
+            return [
+                'slug' => $cat->slug,
+                'name' => ucwords(str_replace('-', ' ', $cat->slug)),
+                'question_count' => $cat->question_count,
+            ];
+        });
+
+    return response()->json([
+        'categories' => $categories
+    ]);
+}
+
 }

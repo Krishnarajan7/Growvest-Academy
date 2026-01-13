@@ -13,12 +13,11 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'login' => 'required|string', // Can be username, student_code, or email
+            'login' => 'required|string', 
             'password' => 'required',
             'device_name' => 'required'
         ]);
-
-        // Find student by username, student_code, or email
+        
         $student = Student::where(function($query) use ($request) {
             $query->where('username', $request->login)
                   ->orWhere('student_code', $request->login)

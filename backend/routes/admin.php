@@ -28,6 +28,14 @@ use App\Http\Controllers\Api\Admin\TestController;
 use App\Http\Controllers\Api\Admin\StudentAnalyticsController;
 
 
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC API ROUTES
+|--------------------------------------------------------------------------
+*/
+Route::get('/super-kids/categories', [QuestionController::class, 'getSuperKidsCategories']);
+
 /*
 |--------------------------------------------------------------------------
 | Admin API Routes
@@ -199,4 +207,5 @@ Route::prefix('analytics/students')->middleware(['auth:admin'])->group(function 
         Route::get('/export-report', [StudentAnalyticsController::class, 'exportStudentReport']);
     });
 });
+
 });
