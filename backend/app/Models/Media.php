@@ -65,14 +65,26 @@ class Media extends Model
     }
 
     public function categories(): BelongsToMany
-    {
-        return $this->belongsToMany(MediaCategory::class, 'media_category_pivot');
-    }
+{
+    return $this->belongsToMany(
+        MediaCategory::class,
+        'media_category_pivot', 
+        'media_id',             
+        'category_id'           
+    );
+}
+
 
     public function albums(): BelongsToMany
-    {
-        return $this->belongsToMany(MediaAlbum::class, 'media_album_pivot');
-    }
+{
+    return $this->belongsToMany(
+        MediaAlbum::class,
+        'media_album_pivot',
+        'media_id',   
+        'album_id'    
+    );
+}
+
 
     public function scopeImage($query)
     {

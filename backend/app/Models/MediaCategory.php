@@ -32,10 +32,16 @@ class MediaCategory extends Model
         return $this->hasMany(MediaCategory::class, 'parent_id');
     }
 
-    public function media(): BelongsToMany
-    {
-        return $this->belongsToMany(Media::class, 'media_category_pivot');
-    }
+   public function media(): BelongsToMany
+{
+    return $this->belongsToMany(
+        Media::class,
+        'media_category_pivot',
+        'category_id',  
+        'media_id'      
+    );
+}
+
 
     public function getMediaCountAttribute()
     {

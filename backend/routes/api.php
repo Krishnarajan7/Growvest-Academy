@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Admin\QuestionController;
 use App\Http\Controllers\Api\Student\StudentQuestionController;
+use App\Http\Controllers\Api\PublicMediaController;
 
 
 Route::middleware('api')
@@ -13,6 +14,10 @@ Route::middleware('api')
 
 Route::get('/super-kids/categories', [QuestionController::class, 'getSuperKidsCategories']);
 
+Route::prefix('public')->group(function () {
+    Route::get('/media', [PublicMediaController::class, 'index']);
+    Route::get('/media/{media}', [PublicMediaController::class, 'show']);
+});
 Route::middleware('auth:sanctum')->group(function () {
     Route::get(
         '/student/questions/by-category/{slug}',

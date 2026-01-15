@@ -64,6 +64,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('system-metrics', [DashboardController::class, 'getSystemMetrics']);
         Route::get('recent-activity', [DashboardController::class, 'getRecentActivity']);
         Route::post('clear-cache', [DashboardController::class, 'clearCache']);
+        Route::get('weekly-activity', [DashboardController::class, 'getWeeklyActivity']);
+
     });
 
     // Student Management Routes

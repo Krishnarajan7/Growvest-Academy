@@ -28,5 +28,7 @@ Route::prefix('student')->group(function () {
         Route::post('/attempts/{attemptId}/answer', [TestTakingController::class, 'submitAnswer']);
         Route::post('/attempts/{attemptId}/complete', [TestTakingController::class, 'completeTest']);
         Route::get('/attempts/{attemptId}/result', [TestTakingController::class, 'getTestResult']);
+        Route::post('/quick-test/save', [TestTakingController::class, 'quickSave']);
+
     });
 });

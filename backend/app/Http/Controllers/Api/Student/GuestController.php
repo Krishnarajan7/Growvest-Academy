@@ -36,9 +36,15 @@ class GuestController extends Controller
         $token = $student->createToken('guest-device')->plainTextToken;
 
         return response()->json([
-            'success' => true,
-            'student' => $student,
-            'token' => $token,
-        ]);
+    'success' => true,
+    'student' => [
+        'id' => $student->id,
+        'student_id' => $student->student_id,
+        'name' => $student->first_name,
+        'age' => $request->age, 
+    ],
+    'token' => $token,
+]);
+
     }
 }

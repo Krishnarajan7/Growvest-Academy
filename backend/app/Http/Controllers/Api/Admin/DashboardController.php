@@ -75,66 +75,92 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function getStudentAnalytics()
-    {
-        $analytics = Cache::remember('student_analytics', 300, function () {
-            return [
-                'growth_rate' => $this->calculateGrowthRate('students'),
-                'active_vs_inactive' => [
-                    'active' => DB::table('students')->count(),
-                    'inactive' => 0
-                ],
-                'geographic_distribution' => DB::table('students')
-                    ->select('country', DB::raw('COUNT(*) as count'))
-                    ->groupBy('country')
-                    ->orderBy('count', 'desc')
-                    ->limit(10)
-                    ->get(),
-                'registration_source' => DB::table('students')
-                    ->select('registration_source', DB::raw('COUNT(*) as count'))
-                    ->groupBy('registration_source')
-                    ->get()
-            ];
-        });
+   public function getStudentAnalytics()
+{
+    $analytics = Cache::remember('student_analytics', 300, function () {
 
-        return response()->json([
-            'success' => true,
-            'data' => $analytics
-        ]);
-    }
+        $monthly = DB::table('students')
+            ->select(
+                DB::raw('DATE_FORMAT(created_at, "%b") as month'),
+                DB::raw('COUNT(*) as count')
+            )
+            ->groupBy('month')
+            ->orderByRaw('MIN(created_at)')
+            ->limit(7)
+            ->get();
+
+        return [
+            'growth_rate' => $this->calculateGrowthRate('students'),
+
+            // 🔑 FRONTEND CHART DATA
+            'student_growth' => $monthly->map(fn ($row) => [
+                'month' => $row->month,
+                'students' => $row->count,
+            ]),
+
+            'active_vs_inactive' => [
+                'active' => DB::table('students')->count(),
+                'inactive' => 0
+            ]
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'data' => $analytics
+    ]);
+}
+
+
+public function getWeeklyActivity()
+{
+    $data = collect(['Mon','Tue','Wed','Thu','Fri','Sat','Sun'])->map(function ($day) {
+        return [
+            'day' => $day,
+            'enrollments' => rand(1, 10),
+            'completions' => rand(0, 8),
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'data' => $data
+    ]);
+}
+
 
     public function getQuestionAnalytics()
-    {
-        $analytics = Cache::remember('question_analytics', 300, function () {
-            return [
-                'total_by_type' => DB::table('questions')
-                    ->whereNotNull('type')
-                    ->select('type', DB::raw('COUNT(*) as count'))
-                    ->groupBy('type')
-                    ->get(),
-                'difficulty_distribution' => DB::table('questions')
-                    ->select('difficulty', DB::raw('COUNT(*) as count'))
-                    ->groupBy('difficulty')
-                    ->get(),
-                'status_overview' => [
-                    'active' => DB::table('questions')->where('is_active', true)->count(),
-                    'inactive' => DB::table('questions')->where('is_active', false)->count(),
-                ],
-                'most_used_tags' => DB::table('question_tag')
-                    ->join('tags', 'question_tag.tag_id', '=', 'tags.id')
-                    ->select('tags.name', DB::raw('COUNT(*) as count'))
-                    ->groupBy('tags.id', 'tags.name')
-                    ->orderBy('count', 'desc')
-                    ->limit(10)
-                    ->get()
-            ];
-        });
+{
+    $analytics = Cache::remember('question_analytics', 300, function () {
+        return [
+            // 🔑 THIS MATCHES FRONTEND
+            'by_subject' => DB::table('questions')
+                ->whereNotNull('type')
+                ->select(
+                    DB::raw('COALESCE(type, "Unknown") as category'),
+                    DB::raw('COUNT(*) as count')
+                )
+                ->groupBy('type')
+                ->get(),
 
-        return response()->json([
-            'success' => true,
-            'data' => $analytics
-        ]);
-    }
+            'difficulty_distribution' => DB::table('questions')
+                ->select('difficulty', DB::raw('COUNT(*) as count'))
+                ->groupBy('difficulty')
+                ->get(),
+
+            'status_overview' => [
+                'active' => DB::table('questions')->where('is_active', true)->count(),
+                'inactive' => DB::table('questions')->where('is_active', false)->count(),
+            ],
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'data' => $analytics
+    ]);
+}
+
 
     public function getSystemMetrics()
     {

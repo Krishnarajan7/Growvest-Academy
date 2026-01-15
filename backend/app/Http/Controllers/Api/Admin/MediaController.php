@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Media;
 use App\Models\MediaCategory;
-use App\Models\MediaAlbum;
+use App\Models\MediaAlbum; 
 use App\Services\MediaService;
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
@@ -207,16 +207,17 @@ class MediaController extends Controller
         $media = Media::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
-            'alt_text' => 'nullable|string|max:500',
-            'caption' => 'nullable|string|max:1000',
+            'name'        => 'sometimes|string|max:255',
+            'title'       => 'sometimes|string|max:255', // Support frontend that sends title
+            'alt_text'    => 'nullable|string|max:500',
+            'caption'     => 'nullable|string|max:1000',
             'description' => 'nullable|string',
-            'visibility' => 'sometimes|in:public,private,protected',
-            'status' => 'sometimes|in:active,inactive,archived',
-            'tags' => 'nullable|array',
+            'visibility'  => 'sometimes|in:public,private,protected',
+            'status'      => 'sometimes|in:active,inactive,archived',
+            'tags'        => 'nullable|array',
             'category_ids' => 'nullable|array',
             'category_ids.*' => 'exists:media_categories,id',
-            'album_ids' => 'nullable|array',
+            'album_ids'   => 'nullable|array',
             'album_ids.*' => 'exists:media_albums,id'
         ]);
 
@@ -227,24 +228,83 @@ class MediaController extends Controller
             ], 422);
         }
 
-        $oldData = $media->toArray();
+        // Support title → name mapping (for frontend compatibility)
+        if ($request->filled('title') && !$request->filled('name')) {
+            $request->merge(['name' => $request->title]);
+        }
+
+        $oldData = $media->only([
+            'name',
+            'alt_text',
+            'caption',
+            'description',
+            'visibility',
+            'status',
+            'tags'
+        ]);
 
         $media->update($request->only([
-            'name', 'alt_text', 'caption', 'description', 
-            'visibility', 'status', 'tags'
+            'name',
+            'alt_text',
+            'caption',
+            'description',
+            'visibility',
+            'status',
+            'tags'
         ]));
 
-        // Sync categories and albums
+        // Category sync
         if ($request->has('category_ids')) {
             $media->categories()->sync($request->category_ids);
         }
 
+        // Default category "General" if no categories were provided
+        if (!$request->has('category_ids') || empty($request->category_ids)) {
+            $defaultCategory = MediaCategory::firstOrCreate(
+                ['slug' => 'general'],
+                ['name' => 'General']
+            );
+
+            $media->categories()->sync([$defaultCategory->id]);
+        }
+
+        // Album sync
         if ($request->has('album_ids')) {
             $media->albums()->sync($request->album_ids);
         }
 
-        $newData = $media->toArray();
-        $changes = array_diff_assoc($newData, $oldData);
+        // Safe change detection (handles arrays properly - no array_diff_assoc crash)
+        $newData = $media->only([
+            'name',
+            'alt_text',
+            'caption',
+            'description',
+            'visibility',
+            'status',
+            'tags'
+        ]);
+
+        $changes = [];
+
+        foreach ($oldData as $key => $oldValue) {
+            $newValue = $newData[$key] ?? null;
+
+            if (is_array($oldValue) || is_array($newValue)) {
+                if (json_encode($oldValue) !== json_encode($newValue)) {
+                    $changes[$key] = [
+                        'old' => $oldValue,
+                        'new' => $newValue,
+                    ];
+                }
+            } else {
+                if ($oldValue !== $newValue) {
+                    $changes[$key] = [
+                        'old' => $oldValue,
+                        'new' => $newValue,
+                    ];
+                }
+            }
+        }
 
         ActivityLogService::log(
             $request->user(),

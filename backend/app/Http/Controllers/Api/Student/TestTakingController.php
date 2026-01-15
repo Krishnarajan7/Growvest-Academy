@@ -215,13 +215,53 @@ class TestTakingController extends Controller
                 'id' => $q->id,
                 'question' => $q->question,
                 'options' => $options,
-
-                // ✅ THIS IS WHAT FRONTEND NEEDS
                 'correct_option' => $correctOption,
             ];
         });
 
     return response()->json($questions);
 }
+    public function quickSave(Request $request)
+{
+    $data = $request->validate([
+        'student_name' => 'required|string',
+        'age' => 'required|integer',
+        'category' => 'required|string',
+        'total_questions' => 'required|integer',
+        'correct_answers' => 'required|integer',
+        'percentage' => 'required|numeric',
+        'answers' => 'required|array',
+    ]);
+
+    $student = $request->user();
+
+    $attempt = TestAttempt::create([
+        'test_id' => null,                 // category-based test
+        'student_id' => $student->id,      
+        'attempt_number' => 1,
+        'started_at' => now(),
+        'completed_at' => now(),
+        'time_spent' => null,
+        'total_questions' => $data['total_questions'],
+        'questions_attempted' => count($data['answers']),
+        'correct_answers' => $data['correct_answers'],
+        'percentage' => $data['percentage'],
+        'score' => $data['percentage'],
+        'status' => 'completed',
+        'answers' => $data['answers'],
+        'result_details' => [
+            'student_name' => $data['student_name'],
+            'age' => $data['age'],
+            'category' => $data['category'],
+        ],
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'attempt_id' => $attempt->id,
+    ]);
+}
+
+
 
 }

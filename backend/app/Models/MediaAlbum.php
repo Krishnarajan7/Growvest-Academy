@@ -25,13 +25,18 @@ class MediaAlbum extends Model
     {
         return $this->belongsTo(Admin::class);
     }
+public function media(): BelongsToMany
+{
+    return $this->belongsToMany(
+        Media::class,
+        'media_album_pivot',
+        'album_id', 
+        'media_id'  
+    )
+    ->withPivot('order')
+    ->orderBy('order');
+}
 
-    public function media(): BelongsToMany
-    {
-        return $this->belongsToMany(Media::class, 'media_album_pivot')
-            ->withPivot('order')
-            ->orderBy('order');
-    }
 
     public function scopePublic($query)
     {
