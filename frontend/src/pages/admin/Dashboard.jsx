@@ -11,6 +11,7 @@ export default function AdminDashboard() {
   const [courseDistribution, setCourseDistribution] = useState([]);
   const [recentStudents, setRecentStudents] = useState([]);
   const [recentTransactions, setRecentTransactions] = useState([]);
+  const [studentGrowth, setStudentGrowth] = useState([]); // ← CHANGE 1: Added missing state
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,34 +22,46 @@ export default function AdminDashboard() {
           revenueRes,
           studentRes,
           questionRes,
-          activityRes
+          weeklyRes
         ] = await Promise.all([
           adminApi.getDashboardStats(),
           adminApi.getRevenueAnalytics(),
           adminApi.getStudentAnalytics(),
           adminApi.getQuestionAnalytics(),
-          adminApi.getRecentActivity(),
+          adminApi.getWeeklyActivity(),      // ← CHANGE 2: Correct API
         ]);
 
-        const dashboardData = statsRes.data.data || {};
+        const dashboardData = statsRes.data || {};
+
 
         setStats(dashboardData);
 
-        // Revenue chart data from main stats endpoint
+        // Revenue chart data
         const revenueChart = dashboardData.revenue_chart || { labels: [], datasets: [] };
         const revenueValues = revenueChart.datasets?.[0]?.data || [];
         setRevenueData(
           revenueValues.map((value, i) => ({
-            month: revenueChart.labels?.[i] || "",
+            month: revenueChart.labels?.[i] || `Month ${i + 1}`,
             revenue: value,
           }))
         );
 
-        // No weekly activity from backend yet
-        setWeeklyActivity([]);
+        setWeeklyActivity(weeklyRes.data || []);
+        questionRes.data?.by_subject
 
-        // Course distribution from question analytics (using subject/category)
-        const subjectData = questionRes.data.data?.by_subject || [];
+const monthlyTrends = studentRes.data?.monthly_trends || [];
+
+setStudentGrowth(
+  monthlyTrends.map(item => ({
+    month: item.month,
+    students: item.student_count
+  }))
+);
+
+
+
+
+        const subjectData = dashboardData.question_statistics?.by_subject || [];
         setCourseDistribution(
           subjectData.map((item, index) => ({
             name: item.category || "Unknown",
@@ -57,11 +70,13 @@ export default function AdminDashboard() {
           }))
         );
 
-        // No recent students/transactions yet
-        setRecentStudents([]);
-        setRecentTransactions([]);
+        // Note: recentStudents & recentTransactions still empty
+        // You may want to add corresponding API endpoints later
+        // setRecentStudents(studentRes.data.data?.recent_students || []);
+        // setRecentTransactions(revenueRes.data.data?.recent_transactions || []);
+
       } catch (err) {
-        console.error("Dashboard load failed", err);
+        console.error("Dashboard load failed:", err);
       } finally {
         setLoading(false);
       }
@@ -120,6 +135,7 @@ export default function AdminDashboard() {
         <p className="text-muted-foreground mt-1">Welcome back to Grovvest Academy Admin Panel</p>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-6 md:mb-8">
         {statsCards.map((stat, index) => {
           const Icon = stat.icon;
@@ -148,6 +164,7 @@ export default function AdminDashboard() {
         })}
       </div>
 
+      {/* Revenue + Weekly Activity */}
       <div className="grid gap-6 lg:grid-cols-2 mb-6 md:mb-8">
         <Card className="bg-card border-border">
           <CardHeader>
@@ -168,21 +185,10 @@ export default function AdminDashboard() {
                   <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(value) => `$${value / 1000}k`} />
                   <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                      color: "hsl(var(--foreground))"
-                    }}
+                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" }}
                     formatter={(value) => [`$${value.toLocaleString()}`, "Revenue"]}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="revenue" 
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={2}
-                    fill="url(#revenueGradient)" 
-                  />
+                  <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#revenueGradient)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -201,14 +207,7 @@ export default function AdminDashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                      color: "hsl(var(--foreground))"
-                    }}
-                  />
+                  <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" }} />
                   <Legend />
                   <Bar dataKey="enrollments" name="Enrollments" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="completions" name="Completions" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
@@ -219,6 +218,7 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
+      {/* Course Distribution + Student Growth */}
       <div className="grid gap-6 lg:grid-cols-3 mb-6 md:mb-8">
         <Card className="bg-card border-border">
           <CardHeader>
@@ -243,19 +243,14 @@ export default function AdminDashboard() {
                     ))}
                   </Pie>
                   <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                      color: "hsl(var(--foreground))"
-                    }}
+                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" }}
                     formatter={(value) => [`${value}`, "Students"]}
                   />
                 </PieChart>
               </ResponsiveContainer>
             </div>
             <div className="grid grid-cols-2 gap-2 mt-4">
-              {Array.isArray(courseDistribution) && courseDistribution.map((item) => (
+              {courseDistribution.map((item) => (
                 <div key={item.name} className="flex items-center gap-2">
                   <div className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
                   <span className="text-xs text-muted-foreground">{item.name} ({item.value})</span>
@@ -273,21 +268,16 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="h-[280px] md:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={revenueData}>
+                <LineChart data={studentGrowth}> {/* ← CHANGE 6: Fixed data source */}
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
                   <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                      color: "hsl(var(--foreground))"
-                    }}
+                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" }}
                   />
                   <Line 
                     type="monotone" 
-                    dataKey="revenue" 
+                    dataKey="students" 
                     stroke="hsl(var(--chart-2))" 
                     strokeWidth={3}
                     dot={{ fill: "hsl(var(--chart-2))", strokeWidth: 2, r: 4 }}
@@ -300,6 +290,7 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
+      {/* Recent Students & Transactions (still placeholders) */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="bg-card border-border">
           <CardHeader>
@@ -308,27 +299,28 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Array.isArray(recentStudents) && recentStudents.length === 0 && (
+              {recentStudents.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">No recent students</p>
+              ) : (
+                recentStudents.map((student) => (
+                  <div key={student.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{student.name || "Unknown"}</p>
+                      <p className="text-sm text-muted-foreground truncate">{student.email || "-"}</p>
+                    </div>
+                    <div className="text-right ml-4">
+                      <p className="text-sm text-foreground">{student.course || "-"}</p>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        student.status === "Active" ? "bg-green-500/10 text-green-500" :
+                        student.status === "Pending" ? "bg-yellow-500/10 text-yellow-500" :
+                        "bg-muted text-muted-foreground"
+                      }`}>
+                        {student.status || "Unknown"}
+                      </span>
+                    </div>
+                  </div>
+                ))
               )}
-              {Array.isArray(recentStudents) && recentStudents.map((student) => (
-                <div key={student.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate">{student.name || "Unknown"}</p>
-                    <p className="text-sm text-muted-foreground truncate">{student.email || "-"}</p>
-                  </div>
-                  <div className="text-right ml-4">
-                    <p className="text-sm text-foreground">{student.course || "-"}</p>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      student.status === "Active" ? "bg-green-500/10 text-green-500" :
-                      student.status === "Pending" ? "bg-yellow-500/10 text-yellow-500" :
-                      "bg-muted text-muted-foreground"
-                    }`}>
-                      {student.status || "Unknown"}
-                    </span>
-                  </div>
-                </div>
-              ))}
             </div>
           </CardContent>
         </Card>
@@ -340,21 +332,22 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Array.isArray(recentTransactions) && recentTransactions.length === 0 && (
+              {recentTransactions.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">No recent transactions</p>
+              ) : (
+                recentTransactions.map((transaction) => (
+                  <div key={transaction.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{transaction.student || "Unknown"}</p>
+                      <p className="text-sm text-muted-foreground truncate">{transaction.course || "-"}</p>
+                    </div>
+                    <div className="text-right ml-4">
+                      <p className="text-lg font-semibold text-primary">{transaction.amount || "$0"}</p>
+                      <p className="text-xs text-muted-foreground">{transaction.date || "-"}</p>
+                    </div>
+                  </div>
+                ))
               )}
-              {Array.isArray(recentTransactions) && recentTransactions.map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate">{transaction.student || "Unknown"}</p>
-                    <p className="text-sm text-muted-foreground truncate">{transaction.course || "-"}</p>
-                  </div>
-                  <div className="text-right ml-4">
-                    <p className="text-lg font-semibold text-primary">{transaction.amount || "$0"}</p>
-                    <p className="text-xs text-muted-foreground">{transaction.date || "-"}</p>
-                  </div>
-                </div>
-              ))}
             </div>
           </CardContent>
         </Card>

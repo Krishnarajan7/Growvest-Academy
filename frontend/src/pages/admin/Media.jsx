@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -22,304 +22,411 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import {
   Search,
   Upload,
   Pencil,
   Trash2,
-  Image,
+  Image as ImageIcon,
   Video,
   Eye,
   Calendar,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
-
-// Sample initial data
-const initialMedia = [
-  {
-    id: 1,
-    title: "Annual Conference 2025",
-    type: "image",
-    category: "Events",
-    url: "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&q=80",
-    uploadedDate: "Dec 15, 2025",
-    views: 1240,
-  },
-  {
-    id: 2,
-    title: "Workshop Highlights",
-    type: "video",
-    category: "Workshops",
-    url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    uploadedDate: "Nov 28, 2025",
-    views: 890,
-  },
-  {
-    id: 3,
-    title: "Team Building Day",
-    type: "image",
-    category: "Team",
-    url: "https://images.unsplash.com/photo-1528605105345-5344ea20e269?w=800&q=80",
-    uploadedDate: "Nov 10, 2025",
-    views: 650,
-  },
-  {
-    id: 4,
-    title: "Product Launch Event",
-    type: "video",
-    category: "Events",
-    url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-    uploadedDate: "Oct 22, 2025",
-    views: 2100,
-  },
-  {
-    id: 5,
-    title: "Office Renovation",
-    type: "image",
-    category: "Infrastructure",
-    url: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80",
-    uploadedDate: "Sep 30, 2025",
-    views: 420,
-  },
-];
+import api from "@/lib/axios";
 
 export default function AdminMedia() {
-  const [media, setMedia] = useState(initialMedia);
+  const [media, setMedia] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
-    type: "image",
+    description: "",
     category: "",
-    url: "",
+    file: null,
   });
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef(null);
 
-  const filteredMedia = media.filter((item) => {
-    const matchesSearch =
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = typeFilter === "all" || item.type === typeFilter;
-    return matchesSearch && matchesType;
-  });
+  const normalizeMedia = (m) => {
+    if (!m || typeof m !== "object") {
+      console.warn("Invalid media item received:", m);
+      return null;
+    }
 
-  const handleAddMedia = () => {
-    if (!formData.title || !formData.url) {
-      toast.error("Title and URL are required");
+    return {
+      id: m.id ?? null,
+      title: m.name ?? "Untitled",
+      type: m.type ?? "unknown",
+      category: m.categories?.[0]?.name ?? "General",
+      categorySlug: m.categories?.[0]?.slug ?? "general",
+      url: m.url ?? "",
+      thumbnailUrl: m.thumbnail_url ?? m.url ?? "",
+      uploadedDate: m.created_at
+        ? new Date(m.created_at).toLocaleDateString()
+        : "",
+      views: m.view_count ?? 0,
+    };
+  };
+
+  useEffect(() => {
+    const fetchMedia = async () => {
+      try {
+        const res = await api.get("/admin/media");
+
+        // More defensive data extraction
+        let items = [];
+
+        if (res?.data?.data?.data) {
+          items = res.data.data.data; // most nested case
+        } else if (res?.data?.data) {
+          items = res.data.data;
+        } else if (Array.isArray(res?.data)) {
+          items = res.data;
+        }
+
+        const validItems = items
+          .filter(Boolean)
+          .map(normalizeMedia)
+          .filter((item) => item !== null && item.id !== null);
+
+        setMedia(validItems);
+      } catch (err) {
+        console.error("Failed to load media:", err);
+        toast.error("Failed to load media library");
+        setMedia([]);
+      }
+    };
+
+    fetchMedia();
+  }, []);
+
+  const categories = useMemo(() => {
+    const cats = new Map();
+
+    media.forEach((m) => {
+      if (m?.categorySlug && m.categorySlug !== "general") {
+        cats.set(m.categorySlug, m.category);
+      }
+    });
+
+    return [
+      { slug: "all", name: "All Categories" },
+      ...Array.from(cats, ([slug, name]) => ({ slug, name })),
+    ];
+  }, [media]);
+
+  const filteredMedia = useMemo(() => {
+    return media.filter((item) => {
+      if (!item) return false;
+
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch =
+        item.title.toLowerCase().includes(searchLower) ||
+        (item.category ?? "").toLowerCase().includes(searchLower);
+
+      const matchesType = typeFilter === "all" || item.type === typeFilter;
+      const matchesCategory =
+        categoryFilter === "all" || item.categorySlug === categoryFilter;
+
+      return matchesSearch && matchesType && matchesCategory;
+    });
+  }, [media, searchQuery, typeFilter, categoryFilter]);
+
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      description: "",
+      category: "",
+      file: null,
+    });
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const createFormData = () => {
+    const data = new FormData();
+    if (formData.file) {
+      data.append("files[]", formData.file);
+    }
+    data.append("title", formData.title);
+    data.append("category", formData.category);
+    data.append("description", formData.description || "");
+    data.append("visibility", "public");
+    return data;
+  };
+
+  const handleAddMedia = async () => {
+    if (!formData.title.trim() || !formData.file) {
+      toast.error("Title and file are required");
       return;
     }
 
-    const newMedia = {
-      id: media.length > 0 ? Math.max(...media.map((m) => m.id)) + 1 : 1,
-      ...formData,
-      uploadedDate: new Date().toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
-      views: 0,
-    };
+    try {
+      const res = await api.post("/admin/media/upload", createFormData());
 
-    setMedia([newMedia, ...media]);
-    setFormData({ title: "", type: "image", category: "", url: "" });
-    setIsAddOpen(false);
-    toast.success("Media added successfully");
+      let uploadedItems = [];
+      if (res?.data?.data?.[0]) {
+        uploadedItems = [res.data.data[0]];
+      } else if (Array.isArray(res?.data?.data)) {
+        uploadedItems = res.data.data;
+      }
+
+      const newItems = uploadedItems
+        .map(normalizeMedia)
+        .filter((item) => item && item.id);
+
+      if (newItems.length > 0) {
+        setMedia((prev) => [...newItems, ...prev]);
+        toast.success("Media uploaded successfully!");
+      }
+
+      resetForm();
+      setIsAddOpen(false);
+    } catch (err) {
+      console.error("Upload error:", err);
+      toast.error("Failed to upload media");
+    }
   };
 
-  const handleEditMedia = () => {
-    if (!selectedMedia) return;
+  const handleEditMedia = async () => {
+    if (!selectedMedia?.id) return;
 
-    setMedia(
-      media.map((m) =>
-        m.id === selectedMedia.id
-          ? { ...m, ...formData }
-          : m
-      )
-    );
-    setIsEditOpen(false);
-    setSelectedMedia(null);
-    setFormData({ title: "", type: "image", category: "", url: "" });
-    toast.success("Media updated successfully");
+    try {
+      const payload = {
+        name: formData.title.trim(),
+        category: formData.category.trim(),
+        description: formData.description.trim(),
+      };
+
+      const res = await api.put(`/admin/media/${selectedMedia.id}`, payload);
+
+      const updatedItem = normalizeMedia(res?.data?.data ?? res?.data);
+
+      if (updatedItem && updatedItem.id) {
+        setMedia((prev) =>
+          prev.map((m) => (m.id === updatedItem.id ? updatedItem : m))
+        );
+        toast.success("Media updated successfully");
+      }
+
+      setIsEditOpen(false);
+      setSelectedMedia(null);
+      resetForm();
+    } catch (err) {
+      console.error("Update failed:", err);
+      toast.error("Failed to update media");
+    }
   };
 
-  const handleDeleteMedia = () => {
-    if (!selectedMedia) return;
+  const handleDeleteMedia = async () => {
+    if (!selectedMedia?.id) return;
 
-    setMedia(media.filter((m) => m.id !== selectedMedia.id));
-    setIsDeleteOpen(false);
-    setSelectedMedia(null);
-    toast.success("Media deleted successfully");
+    try {
+      await api.delete(`/admin/media/${selectedMedia.id}`);
+      setMedia((prev) => prev.filter((m) => m.id !== selectedMedia.id));
+      toast.success("Media deleted successfully");
+    } catch (err) {
+      console.error("Delete failed:", err);
+      toast.error("Failed to delete media");
+    } finally {
+      setIsDeleteOpen(false);
+      setSelectedMedia(null);
+    }
   };
 
   const openEditDialog = (item) => {
+    if (!item) return;
     setSelectedMedia(item);
     setFormData({
-      title: item.title,
-      type: item.type,
-      category: item.category,
-      url: item.url,
+      title: item.title || "",
+      description: "",
+      category: item.category || "",
+      file: null,
     });
     setIsEditOpen(true);
   };
 
   const openDeleteDialog = (item) => {
+    if (!item) return;
     setSelectedMedia(item);
     setIsDeleteOpen(true);
   };
 
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files?.[0]) {
+      handleFileSelect(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileSelect = (file) => {
+    if (!file) return;
+    const fileType = file.type.startsWith("video/") ? "video" : "image";
+    setFormData((prev) => ({ ...prev, file, type: fileType }));
+  };
+
   return (
-    <div className="p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+    <div className="p-4 sm:p-6 lg:p-8 xl:p-10 2xl:p-12 mx-auto w-full max-w-screen-2xl">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Media</h1>
-          <p className="text-muted-foreground mt-1">Manage photos and videos</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Media Library</h1>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+            Manage your photos & videos
+          </p>
         </div>
 
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Media
+            <Button className="w-full sm:w-auto">
+              <Upload className="mr-2 h-4 w-4" />
+              Upload New
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Upload New Media</DialogTitle>
-              <DialogDescription>Add a new photo or video to the gallery</DialogDescription>
+              <DialogDescription>
+                Drag & drop or click to upload image/video
+              </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-5 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="title">Title</Label>
+                <Label htmlFor="title">Title *</Label>
                 <Input
                   id="title"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Enter media title"
+                  placeholder="My awesome event photo"
                 />
               </div>
+
               <div className="grid gap-2">
-                <Label htmlFor="type">Type</Label>
-                <Select
-                  value={formData.type}
-                  onValueChange={(value) => setFormData({ ...formData, type: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="image">Image</SelectItem>
-                    <SelectItem value="video">Video</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Description</Label>
+                <Input
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  placeholder="Brief description of this media..."
+                />
               </div>
+
+              <div className="grid gap-2">
+                <Label>Media File *</Label>
+                <div
+                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                    dragActive
+                      ? "border-primary bg-primary/5"
+                      : "border-muted-foreground/30 hover:border-primary/50"
+                  }`}
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={handleDrop}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,video/mp4"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) {
+                        handleFileSelect(e.target.files[0]);
+                      }
+                    }}
+                  />
+                  {formData.file ? (
+                    <div className="space-y-2">
+                      <p className="font-medium">{formData.file.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {(formData.file.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setFormData((p) => ({ ...p, file: null }))}
+                      >
+                        <X className="h-3.5 w-3.5 mr-1.5" />
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 py-4">
+                      <Upload className="mx-auto h-10 w-10 text-muted-foreground" />
+                      <p className="text-sm font-medium">
+                        Click to browse or drag & drop here
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Supports: PNG, JPG, JPEG, MP4 (max 50MB recommended)
+                      </p>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="mt-2"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        Select File
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="grid gap-2">
                 <Label htmlFor="category">Category</Label>
                 <Input
                   id="category"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  placeholder="e.g., Events, Workshops"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="url">URL</Label>
-                <Input
-                  id="url"
-                  value={formData.url}
-                  onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                  placeholder="https://example.com/media.jpg"
+                  placeholder="Events, Workshops, Team..."
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddOpen(false)}>
+              <Button variant="outline" onClick={() => { setIsAddOpen(false); resetForm(); }}>
                 Cancel
               </Button>
-              <Button onClick={handleAddMedia}>Upload</Button>
+              <Button onClick={handleAddMedia} disabled={!formData.file || !formData.title.trim()}>
+                Upload
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Image className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{media.length}</p>
-                <p className="text-sm text-muted-foreground">Total Media</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                <Image className="h-5 w-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">
-                  {media.filter((m) => m.type === "image").length}
-                </p>
-                <p className="text-sm text-muted-foreground">Images</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                <Video className="h-5 w-5 text-purple-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">
-                  {media.filter((m) => m.type === "video").length}
-                </p>
-                <p className="text-sm text-muted-foreground">Videos</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-                <Eye className="h-5 w-5 text-green-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">
-                  {media.reduce((sum, m) => sum + m.views, 0).toLocaleString()}
-                </p>
-                <p className="text-sm text-muted-foreground">Total Views</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Search & Filter */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-6">
+        <div className="relative flex-1 min-w-[220px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search media..."
+            placeholder="Search title or category..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
           />
         </div>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder="Filter by type" />
+          <SelectTrigger className="w-full sm:w-36">
+            <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
@@ -327,83 +434,120 @@ export default function AdminMedia() {
             <SelectItem value="video">Videos</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-full sm:w-44">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            {categories.map((cat) => (
+              <SelectItem key={cat.slug} value={cat.slug}>
+                {cat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Media Grid */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredMedia.length === 0 ? (
-          <p className="col-span-full text-center text-muted-foreground py-8">
-            No media found matching your filters.
+      {filteredMedia.length === 0 ? (
+        <div className="text-center py-16">
+          <p className="text-lg font-medium text-muted-foreground">No media found</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Try changing filters or upload something new
           </p>
-        ) : (
-          filteredMedia.map((item) => (
-            <Card key={item.id} className="overflow-hidden group">
-              <div className="relative aspect-video bg-muted">
+        </div>
+      ) : (
+        <div className="grid gap-6 sm:gap-7 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
+          {filteredMedia.map((item) => (
+            <Card
+              key={item.id}
+              className="overflow-hidden group hover:shadow-xl transition-all duration-300 border flex flex-col min-h-[420px] sm:min-h-[460px]"
+            >
+              <div className="relative aspect-[4/3] sm:aspect-video bg-muted/60">
                 {item.type === "video" ? (
                   <video
                     src={item.url}
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
                     muted
                     loop
+                    playsInline
                   />
                 ) : (
                   <img
-                    src={item.url}
+                    src={item.thumbnailUrl}
                     alt={item.title}
-                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     onError={(e) => {
-                      e.currentTarget.src = "https://via.placeholder.com/400x300?text=Image+Not+Found";
+                      e.currentTarget.src =
+                        "https://images.unsplash.com/photo-1568667256549-094345857637?w=800&q=60&text=Image+Error";
                     }}
                   />
                 )}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                  <Button size="icon" variant="secondary" onClick={() => openEditDialog(item)}>
-                    <Pencil className="h-4 w-4" />
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4 gap-3">
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="h-10 w-10 shadow-md"
+                    onClick={() => openEditDialog(item)}
+                  >
+                    <Pencil className="h-5 w-5" />
                   </Button>
-                  <Button size="icon" variant="destructive" onClick={() => openDeleteDialog(item)}>
-                    <Trash2 className="h-4 w-4" />
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    className="h-10 w-10 shadow-md"
+                    onClick={() => openDeleteDialog(item)}
+                  >
+                    <Trash2 className="h-5 w-5" />
                   </Button>
                 </div>
-                <span
-                  className={`absolute top-2 left-2 text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
-                    item.type === "video"
-                      ? "bg-purple-600 text-white"
-                      : "bg-blue-600 text-white"
-                  }`}
+
+                <Badge
+                  className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium"
+                  variant="secondary"
                 >
-                  {item.type === "video" ? <Video className="h-3 w-3" /> : <Image className="h-3 w-3" />}
+                  {item.type === "video" ? <Video className="h-4 w-4" /> : <ImageIcon className="h-4 w-4" />}
                   {item.type}
-                </span>
+                </Badge>
               </div>
-              <CardContent className="p-4">
-                <h3 className="font-semibold line-clamp-1">{item.title}</h3>
-                <div className="flex items-center justify-between mt-2 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
+
+              <CardContent className="p-5 flex flex-col flex-grow">
+                <h3 className="font-semibold line-clamp-2 text-lg leading-tight mb-3">
+                  {item.title}
+                </h3>
+
+                <div className="mt-auto flex flex-wrap justify-between items-center text-sm text-muted-foreground gap-3">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
                     {item.uploadedDate}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Eye className="h-3 w-3" />
-                    {item.views.toLocaleString()}
-                  </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Eye className="h-4 w-4" />
+                    {item.views?.toLocaleString() ?? "0"}
+                  </div>
                 </div>
-                {item.category && (
-                  <span className="inline-block mt-3 text-xs px-2 py-1 bg-muted rounded-full">
+
+                {item.category && item.category !== "General" && (
+                  <Badge
+                    variant="outline"
+                    className="mt-4 self-start text-xs sm:text-sm px-3 py-1"
+                  >
                     {item.category}
-                  </span>
+                  </Badge>
                 )}
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Media</DialogTitle>
-            <DialogDescription>Update the details of this media item</DialogDescription>
+            <DialogDescription>Update media information</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -414,35 +558,21 @@ export default function AdminMedia() {
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               />
             </div>
+
             <div className="grid gap-2">
-              <Label htmlFor="edit-type">Type</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value) => setFormData({ ...formData, type: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="image">Image</SelectItem>
-                  <SelectItem value="video">Video</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Description</Label>
+              <Input
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
             </div>
+
             <div className="grid gap-2">
               <Label htmlFor="edit-category">Category</Label>
               <Input
                 id="edit-category"
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-url">URL</Label>
-              <Input
-                id="edit-url"
-                value={formData.url}
-                onChange={(e) => setFormData({ ...formData, url: e.target.value })}
               />
             </div>
           </div>
@@ -455,13 +585,13 @@ export default function AdminMedia() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Dialog */}
+      {/* Delete Confirmation */}
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Media</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{selectedMedia?.title}"? This action cannot be undone.
+              Are you sure you want to delete <strong>"{selectedMedia?.title}"</strong>? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

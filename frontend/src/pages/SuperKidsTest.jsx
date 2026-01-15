@@ -189,13 +189,15 @@ const SuperKidsTest = () => {
         setLoading(true);
 
         const res = await api.get(
-  `/student/questions/by-category/${categoryId}`
+  `/student/tests/by-category/${categoryId}`
 );
 
+
 // api already returns response.data
-const fetchedQuestions = Array.isArray(res.data)
-  ? res.data
+const fetchedQuestions = Array.isArray(res)
+  ? res
   : [];
+
 
 console.log('Questions loaded:', fetchedQuestions);
 
@@ -393,10 +395,27 @@ if (!config) return null;
     setResult(null);
   };
 
-  const finishTest = () => {
-    setResult(calculateResult());
-    setShowResult(true);
-  };
+  const finishTest = async () => {
+  const resultData = calculateResult();
+
+  setResult(resultData);
+  setShowResult(true);
+
+  try {
+    await api.post('/student/quick-test/save', {
+      student_name: studentData?.name || 'Guest',
+      age: studentData?.age || null,
+      category: categoryId,
+      total_questions: resultData.total_questions,
+      correct_answers: resultData.correct_answers,
+      percentage: Math.round(resultData.result_summary.percentage),
+      answers, // selected answers array
+    });
+  } catch (error) {
+    console.error('Failed to save test result', error);
+  }
+};
+
 
   if (showResult) {
     if (!result) {

@@ -83,6 +83,10 @@ api.interceptors.response.use(
     });
   }
 );
+export const publicApi = {
+  getPublicMedia: (params) => api.get('/public/media', { params }),
+  getPublicMediaItem: (id) => api.get(`/public/media/${id}`),
+};
 
 // Admin API methods
 export const adminApi = {
@@ -101,6 +105,7 @@ export const adminApi = {
   getQuestionAnalytics: () => api.get('/admin/dashboard/question-analytics'),
   getSystemMetrics: () => api.get('/admin/dashboard/system-metrics'),
   getRecentActivity: () => api.get('/admin/dashboard/recent-activity'),
+  getWeeklyActivity: () => api.get('/admin/dashboard/weekly-activity'),
   clearDashboardCache: () => api.post('/admin/dashboard/clear-cache'),
 
   // Students

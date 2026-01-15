@@ -203,7 +203,6 @@ export default function TestQuestions() {
   setUploading(true);
 
   try {
-    // ✅ PASS FILE DIRECTLY
     await adminApi.importQuestions(selectedFile);
 
     toast({

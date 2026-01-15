@@ -38,9 +38,10 @@ const categories = [
   { id: "physics", name: "Physics", color: "#0ea5e9" },
   { id: "general-maths", name: "Mathematics", color: "#10b981" },
   { id: "basic-computer", name: "Computer Basics", color: "#8b5cf6" },
-  { id: "gk", name: "General Knowledge", color: "#f59e0b" },
+  { id: "general-knowledge", name: "General Knowledge", color: "#f59e0b" }, 
   { id: "public-speaking", name: "Public Speaking", color: "#ec4899" },
 ];
+
 
 const ageGroups = ["6-8 years", "9-11 years", "12-14 years", "15-16 years"];
 
@@ -50,11 +51,12 @@ const getCategoryKey = (catId) => {
     physics: "physics",
     "general-maths": "maths",
     "basic-computer": "computer",
-    gk: "gk",
+    "general-knowledge": "gk",
     "public-speaking": "publicSpeaking",
   };
-  return map[catId] || "spokenEnglish";
+  return map[catId] || null;
 };
+
 
 const getScoreColor = (score) => {
   if (score >= 90) return "text-emerald-600 dark:text-emerald-400";
@@ -86,46 +88,78 @@ export default function StudentAnalytics() {
 
   useEffect(() => {
     const fetchAllData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  try {
+    setLoading(true);
+    setError(null);
 
-        const [
-          studentsData,
-          statsData,
-          categoryData,
-          ageGroupData,
-          trendsData,
-          topData,
-        ] = await Promise.all([
-          adminApi.getStudentAnalyticsList(),
-          adminApi.getStudentAnalyticsStats(),
-          adminApi.getStudentCategoryPerformance(),
-          adminApi.getStudentAgeGroups(),
-          adminApi.getStudentMonthlyTrends(),
-          adminApi.getTopPerformers(),
-        ]);
+   const [
+  studentsRes,
+  statsRes,
+  categoryRes,
+  ageGroupRes,
+  trendsRes,
+  topRes,
+] = await Promise.all([
+  adminApi.getStudentAnalyticsList(),
+  adminApi.getStudentAnalyticsStats(),
+  adminApi.getStudentCategoryPerformance(),
+  adminApi.getStudentAgeGroups(),
+  adminApi.getStudentMonthlyTrends(),
+  adminApi.getTopPerformers(),
+]);
 
-        // Force array type safety
-        setStudents(Array.isArray(studentsData) ? studentsData : []);
-        setQuickStats(statsData);
-        setCategoryAverages(Array.isArray(categoryData) ? categoryData : []);
-        setAgeGroupPerformance(Array.isArray(ageGroupData) ? ageGroupData : []);
-        setMonthlyTrends(Array.isArray(trendsData) ? trendsData : []);
-        setTopPerformers(Array.isArray(topData) ? topData : []);
+const studentsData = studentsRes?.data ?? [];
+const statsData = statsRes?.data ?? {};
+const categoryData = categoryRes?.data ?? [];
+const ageGroupData = ageGroupRes?.data ?? [];
+const trendsData = trendsRes?.data ?? [];
+const topData = topRes?.data ?? [];
 
-      } catch (err) {
-        console.error("Analytics fetch error:", err);
-        const errorMessage =
-          err.response?.data?.message ||
-          err.message ||
-          "Failed to load analytics data. Please check your network or server.";
-        setError(errorMessage);
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
+
+    setQuickStats({
+      totalStudents: statsData?.overall_stats?.total_students ?? 0,
+      overallAverage: statsData?.overall_stats?.avg_score_overall ?? 0,
+      totalTests: statsData?.overall_stats?.total_tests_taken ?? 0,
+      ninetyPlusCount: statsData?.overall_stats?.ninety_plus ?? 0,
+    });
+
+    setStudents(
+  Array.isArray(studentsData)
+    ? studentsData.map((s) => ({
+        id: s.id,
+        name: s.name || "Unknown",
+        age: s.age || "Unknown",
+        avgScore: s.avg_score ?? 0,
+        testsCompleted: s.tests_completed ?? 0,
+
+        spokenEnglish: s.spoken_english ?? 0,
+        physics: s.physics ?? 0,
+        maths: s.general_maths ?? 0,
+        computer: s.basic_computer ?? 0,
+        gk: s.general_knowledge ?? 0,
+        publicSpeaking: s.public_speaking ?? 0,
+      }))
+    : []
+);
+
+    setCategoryAverages(Array.isArray(categoryData) ? categoryData : []);
+    setAgeGroupPerformance(Array.isArray(ageGroupData) ? ageGroupData : []);
+    setMonthlyTrends(Array.isArray(trendsData) ? trendsData : []);
+    setTopPerformers(Array.isArray(topData) ? topData : []);
+
+  } catch (err) {
+    console.error("Analytics fetch error:", err);
+    const errorMessage =
+      err.response?.data?.message ||
+      err.message ||
+      "Failed to load analytics data";
+    setError(errorMessage);
+    toast.error(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     fetchAllData();
   }, []);
