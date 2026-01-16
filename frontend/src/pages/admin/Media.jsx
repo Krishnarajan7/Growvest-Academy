@@ -46,10 +46,11 @@ export default function AdminMedia() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
+  const [categoryOptions, setCategoryOptions] = useState([]);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    category: "",
+    categoryId: "", // ← MUST be empty string for Radix Select
     file: null,
   });
   const [dragActive, setDragActive] = useState(false);
@@ -67,6 +68,7 @@ export default function AdminMedia() {
       type: m.type ?? "unknown",
       category: m.categories?.[0]?.name ?? "General",
       categorySlug: m.categories?.[0]?.slug ?? "general",
+      categoryId: m.categories?.[0]?.id ?? "",
       url: m.url ?? "",
       thumbnailUrl: m.thumbnail_url ?? m.url ?? "",
       uploadedDate: m.created_at
@@ -80,17 +82,10 @@ export default function AdminMedia() {
     const fetchMedia = async () => {
       try {
         const res = await api.get("/admin/media");
-
-        // More defensive data extraction
         let items = [];
-
-        if (res?.data?.data?.data) {
-          items = res.data.data.data; // most nested case
-        } else if (res?.data?.data) {
-          items = res.data.data;
-        } else if (Array.isArray(res?.data)) {
-          items = res.data;
-        }
+        if (res?.data?.data?.data) items = res.data.data.data;
+        else if (res?.data?.data) items = res.data.data;
+        else if (Array.isArray(res?.data)) items = res.data;
 
         const validItems = items
           .filter(Boolean)
@@ -108,20 +103,35 @@ export default function AdminMedia() {
     fetchMedia();
   }, []);
 
+  useEffect(() => {
+    api
+      .get("/admin/media/categories")
+      .then((res) => {
+        const cats = res.data.data || [];
+        setCategoryOptions(cats);
+
+        // Optional: auto-select first category (usually General)
+        if (cats.length > 0 && !formData.categoryId) {
+          setFormData((prev) => ({
+            ...prev,
+            categoryId: String(cats[0].id),
+          }));
+        }
+      })
+      .catch(() => {
+        toast.error("Failed to load media categories");
+      });
+  }, []);
+
   const categories = useMemo(() => {
-    const cats = new Map();
-
-    media.forEach((m) => {
-      if (m?.categorySlug && m.categorySlug !== "general") {
-        cats.set(m.categorySlug, m.category);
-      }
-    });
-
     return [
       { slug: "all", name: "All Categories" },
-      ...Array.from(cats, ([slug, name]) => ({ slug, name })),
+      ...categoryOptions.map((cat) => ({
+        slug: cat.slug,
+        name: cat.name,
+      })),
     ];
-  }, [media]);
+  }, [categoryOptions]);
 
   const filteredMedia = useMemo(() => {
     return media.filter((item) => {
@@ -144,7 +154,7 @@ export default function AdminMedia() {
     setFormData({
       title: "",
       description: "",
-      category: "",
+      categoryId: "", // ← empty string
       file: null,
     });
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -156,9 +166,11 @@ export default function AdminMedia() {
       data.append("files[]", formData.file);
     }
     data.append("title", formData.title);
-    data.append("category", formData.category);
     data.append("description", formData.description || "");
     data.append("visibility", "public");
+    if (formData.categoryId) {
+      data.append("category_ids[]", formData.categoryId);
+    }
     return data;
   };
 
@@ -172,11 +184,8 @@ export default function AdminMedia() {
       const res = await api.post("/admin/media/upload", createFormData());
 
       let uploadedItems = [];
-      if (res?.data?.data?.[0]) {
-        uploadedItems = [res.data.data[0]];
-      } else if (Array.isArray(res?.data?.data)) {
-        uploadedItems = res.data.data;
-      }
+      if (res?.data?.data?.[0]) uploadedItems = [res.data.data[0]];
+      else if (Array.isArray(res?.data?.data)) uploadedItems = res.data.data;
 
       const newItems = uploadedItems
         .map(normalizeMedia)
@@ -201,8 +210,10 @@ export default function AdminMedia() {
     try {
       const payload = {
         name: formData.title.trim(),
-        category: formData.category.trim(),
         description: formData.description.trim(),
+        category_ids: formData.categoryId
+          ? [Number(formData.categoryId)]
+          : [],
       };
 
       const res = await api.put(`/admin/media/${selectedMedia.id}`, payload);
@@ -246,8 +257,8 @@ export default function AdminMedia() {
     setSelectedMedia(item);
     setFormData({
       title: item.title || "",
-      description: "",
-      category: item.category || "",
+      description: item.description || "",
+      categoryId: item.categoryId ? String(item.categoryId) : "",
       file: null,
     });
     setIsEditOpen(true);
@@ -392,20 +403,40 @@ export default function AdminMedia() {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="category">Category</Label>
-                <Input
-                  id="category"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  placeholder="Events, Workshops, Team..."
-                />
+                <Label>Category</Label>
+                <Select
+                  value={formData.categoryId}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, categoryId: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent position="popper" className="z-50">
+                    {categoryOptions.map((cat) => (
+                      <SelectItem key={cat.id} value={String(cat.id)}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => { setIsAddOpen(false); resetForm(); }}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsAddOpen(false);
+                  resetForm();
+                }}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleAddMedia} disabled={!formData.file || !formData.title.trim()}>
+              <Button
+                onClick={handleAddMedia}
+                disabled={!formData.file || !formData.title.trim()}
+              >
                 Upload
               </Button>
             </DialogFooter>
@@ -568,12 +599,24 @@ export default function AdminMedia() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="edit-category">Category</Label>
-              <Input
-                id="edit-category"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              />
+              <Label>Category</Label>
+              <Select
+                value={formData.categoryId}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, categoryId: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent position="popper" className="z-50">
+                  {categoryOptions.map((cat) => (
+                    <SelectItem key={cat.id} value={String(cat.id)}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>

@@ -37,14 +37,12 @@ const Activities = () => {
       try {
         const params = {};
         if (selectedCategory !== 'all') {
-          params.category_slug = selectedCategory; // ← backend should filter by slug
+          params.category_slug = selectedCategory;
         }
 
         const res = await publicApi.getPublicMedia(params);
-
-        // Safe access - supports both paginated and non-paginated responses
+        // Support both paginated and non-paginated responses
         const items = res.data?.data?.data || res.data?.data || [];
-
         setMedia(items);
       } catch (error) {
         console.error('Failed to load media:', error);
@@ -60,6 +58,7 @@ const Activities = () => {
     id: item.id,
     type: item.type,
     title: item.name || 'Untitled',
+    description: item.description || '',
     category: item.categories?.[0]?.name ?? 'General',
     categorySlug: item.categories?.[0]?.slug ?? 'general',
     thumbnail: item.thumbnail_url || item.url || '',
@@ -147,92 +146,155 @@ const Activities = () => {
             <div className="text-center py-20 text-muted-foreground">Loading media...</div>
           ) : galleryItems.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">
-              No media found in this category yet.
+              No media found {selectedCategory !== 'all' ? `in ${selectedCategory}` : 'yet'}.
             </div>
           ) : (
-            <>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                {galleryItems.map((item) => (
-                  <Card
-                    key={item.id}
-                    className="group overflow-hidden bg-card border-border hover:shadow-xl transition-all duration-500 cursor-pointer"
-                    onClick={() => setSelectedMedia(item.id)}
-                  >
-                    <div className="relative aspect-[4/3] overflow-hidden">
-                      <img
-                        src={item.thumbnail}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                        onError={(e) => {
-                          e.target.src = '/placeholder-image.jpg';
-                        }}
-                      />
+            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
+              {galleryItems.map((item) => (
+                <Card
+                  key={item.id}
+                  className="
+                    group overflow-hidden 
+                    bg-card 
+                    border border-border/40
+                    rounded-xl 
+                    shadow-sm hover:shadow-xl 
+                    transition-all duration-300 
+                    cursor-pointer 
+                    flex flex-col
+                    backdrop-blur-sm
+                    hover:-translate-y-1
+                  "
+                  onClick={() => setSelectedMedia(item.id)}
+                >
+                  {/* Media Container */}
+                  <div className="relative aspect-[4/3] overflow-hidden flex-shrink-0">
+                    <img
+                      src={item.thumbnail}
+                      alt={item.title}
+                      className="
+                        w-full h-full object-cover 
+                        transition-transform duration-700 
+                        group-hover:scale-[1.08]
+                      "
+                      onError={(e) => {
+                        e.target.src = '/placeholder-image.jpg';
+                      }}
+                    />
 
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent/0 pointer-events-none" />
 
-                      {item.type === 'video' && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                            <Play className="w-7 h-7 text-primary-foreground fill-current ml-1" />
-                          </div>
+                    {/* Play button for videos */}
+                    {item.type === 'video' && (
+                      <div className="
+                        absolute inset-0 
+                        flex items-center justify-center
+                        opacity-90 group-hover:opacity-100
+                        transition-opacity duration-300
+                      ">
+                        <div className="
+                          w-14 h-14 sm:w-16 sm:h-16 
+                          bg-primary/90 backdrop-blur-sm 
+                          rounded-full 
+                          flex items-center justify-center 
+                          shadow-lg shadow-primary/30
+                          ring-1 ring-primary/40
+                          transform group-hover:scale-110 
+                          transition-transform duration-300
+                        ">
+                          <Play className="w-7 h-7 sm:w-8 sm:h-8 text-primary-foreground fill-current ml-0.5" />
                         </div>
+                      </div>
+                    )}
+
+                    {/* Duration badge */}
+                    {item.duration && (
+                      <div className="
+                        absolute bottom-3 right-3 
+                        px-2.5 py-1 
+                        bg-black/75 backdrop-blur-md 
+                        text-white text-xs font-medium 
+                        rounded-md 
+                        flex items-center gap-1.5
+                        shadow-sm
+                      ">
+                        <Clock className="w-3.5 h-3.5" />
+                        {item.duration}
+                      </div>
+                    )}
+
+                    {/* Category badge */}
+                    <div className="
+                      absolute top-3 left-3 
+                      px-2.5 py-1 
+                      bg-background/80 backdrop-blur-md 
+                      border border-border/50
+                      text-foreground/90 text-xs font-medium 
+                      rounded-md 
+                      flex items-center gap-1.5
+                      shadow-sm
+                    ">
+                      {item.type === 'video' ? (
+                        <Film className="w-3.5 h-3.5" />
+                      ) : (
+                        <ImageIcon className="w-3.5 h-3.5" />
                       )}
+                      {item.category}
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-5 flex flex-col flex-grow">
+                    <h3 className="
+                      font-semibold text-lg leading-tight 
+                      text-foreground 
+                      mb-2.5 
+                      line-clamp-2
+                      group-hover:text-primary 
+                      transition-colors
+                    ">
+                      {item.title}
+                    </h3>
+
+                    {item.description && (
+                      <p className="
+                        text-sm text-muted-foreground 
+                        line-clamp-2 
+                        mb-4 
+                        flex-grow
+                      ">
+                        {item.description}
+                      </p>
+                    )}
+
+                    {/* Meta row */}
+                    <div className="
+                      flex items-center justify-between 
+                      text-xs text-muted-foreground/80
+                      mt-auto pt-3 border-t border-border/40
+                    ">
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5" />
+                        {item.date}
+                      </span>
 
                       {item.duration && (
-                        <span className="absolute bottom-3 right-3 px-2.5 py-1 bg-black/80 text-white text-xs font-medium rounded-md flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5" />
                           {item.duration}
                         </span>
                       )}
-
-                      <span className="absolute top-3 left-3 px-3 py-1.5 bg-background/95 backdrop-blur-sm text-foreground text-xs font-semibold rounded-md capitalize flex items-center gap-1.5">
-                        {item.type === 'video' ? (
-                          <Film className="w-3 h-3" />
-                        ) : (
-                          <ImageIcon className="w-3 h-3" />
-                        )}
-                        {item.category}
-                      </span>
                     </div>
-
-                    <div className="p-5">
-                      <h3 className="font-semibold text-lg text-foreground mb-3 line-clamp-1">
-                        {item.title}
-                      </h3>
-
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {item.date}
-                        </span>
-
-                        {item.duration && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5" />
-                            {item.duration}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-
-              <div className="text-center mt-12">
-                <Button
-                  size="lg"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
-                  disabled
-                >
-                  Load More (coming soon)
-                </Button>
-              </div>
-            </>
+                  </div>
+                </Card>
+              ))}
+            </div>
           )}
         </div>
       </section>
 
-      {/* Simple Image Modal */}
+      {/* Modal */}
       {selectedMedia && (
         <div
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
