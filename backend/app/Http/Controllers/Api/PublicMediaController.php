@@ -31,15 +31,26 @@ class PublicMediaController extends Controller
                 ->latest()
                 ->paginate(12)
                 ->through(fn ($media) => [
-                    'id' => $media->id,
-                    'name' => $media->name,
-                    'type' => $media->type,
-                    'url' => $media->url,
-                    'thumbnail_url' => $media->thumbnail_url ?? $media->url,
-                    'created_at' => $media->created_at,
-                    'view_count' => $media->view_count,
-                    'category' => $media->categories->first()?->slug,
-                ]),
+    'id' => $media->id,
+    'name' => $media->name,
+    'type' => $media->type,
+    'url' => $media->url,
+    'thumbnail_url' => $media->thumbnail_url ?? $media->url,
+    'description' => $media->description,
+    'caption' => $media->caption,
+    'duration' => $media->duration,
+
+    'created_at' => $media->created_at,
+    'view_count' => $media->view_count,
+
+    // Better structure for frontend
+    'categories' => $media->categories->map(fn ($cat) => [
+        'id' => $cat->id,
+        'name' => $cat->name,
+        'slug' => $cat->slug,
+    ]),
+]),
+
         ]);
     }
 
@@ -55,14 +66,20 @@ class PublicMediaController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'id' => $media->id,
-                'name' => $media->name,
-                'type' => $media->type,
-                'url' => $media->url,
-                'thumbnail_url' => $media->thumbnail_url ?? $media->url,
-                'created_at' => $media->created_at,
-                'view_count' => $media->view_count,
-            ],
+    'id' => $media->id,
+    'name' => $media->name,
+    'type' => $media->type,
+    'url' => $media->url,
+    'thumbnail_url' => $media->thumbnail_url ?? $media->url,
+    'description' => $media->description,
+    'caption' => $media->caption,
+    'duration' => $media->duration,
+
+    'created_at' => $media->created_at,
+    'view_count' => $media->view_count,
+    'categories' => $media->categories,
+],
+
         ]);
     }
 }

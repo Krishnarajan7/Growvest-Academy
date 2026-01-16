@@ -11,28 +11,26 @@ use Illuminate\Support\Str;
 
 class MediaCategoryController extends Controller
 {
-    public function index(Request $request)
-    {
-        $categories = MediaCategory::with(['parent', 'children'])
-            ->orderBy('order')
-            ->get()
-            ->toTree();
+  public function index(Request $request)
+{
+    $categories = MediaCategory::orderBy('order')->get();
 
-        ActivityLogService::log(
-            $request->user(),
-            'view_list',
-            'Viewed media categories',
-            'MediaCategory',
-            null,
-            null,
-            $request
-        );
+    ActivityLogService::log(
+        $request->user(),
+        'view_list',
+        'Viewed media categories',
+        'MediaCategory',
+        null,
+        null,
+        $request
+    );
 
-        return response()->json([
-            'success' => true,
-            'data' => $categories
-        ]);
-    }
+    return response()->json([
+        'success' => true,
+        'data' => $categories
+    ]);
+}
+
 
     public function store(Request $request)
     {

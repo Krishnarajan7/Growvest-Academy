@@ -96,42 +96,45 @@ Route::prefix('students')->middleware(['auth:admin'])->group(function () {
 });
 
     // Media
-    Route::prefix('media')->group(function () {
-        Route::get('/', [MediaController::class, 'index']);
-        Route::post('/upload', [MediaController::class, 'store']);
-        Route::post('/upload-from-url', [MediaController::class, 'uploadFromUrl']);
-        Route::get('/statistics', [MediaController::class, 'statistics']);
-        Route::get('/usage', [MediaController::class, 'getUsageByDate']);
-        Route::get('/{id}', [MediaController::class, 'show']);
-        Route::put('/{id}', [MediaController::class, 'update']);
-        Route::delete('/{id}', [MediaController::class, 'destroy']);
-        Route::get('/{id}/download', [MediaController::class, 'download']);
-        Route::post('/{id}/generate-thumbnail', [MediaController::class, 'generateThumbnail']);
-        Route::post('/{id}/optimize', [MediaController::class, 'optimize']);
-        Route::post('/{id}/move-storage', [MediaController::class, 'moveToStorage']);
-        Route::post('/bulk-delete', [MediaController::class, 'bulkDelete']);
+   Route::prefix('media')->group(function () {
 
-        // Media Categories
-        Route::prefix('categories')->group(function () {
-            Route::get('/', [MediaCategoryController::class, 'index']);
-            Route::post('/', [MediaCategoryController::class, 'store']);
-            Route::put('/{id}', [MediaCategoryController::class, 'update']);
-            Route::delete('/{id}', [MediaCategoryController::class, 'destroy']);
-            Route::post('/reorder', [MediaCategoryController::class, 'reorder']);
-        });
-
-        // Media Albums
-        Route::prefix('albums')->group(function () {
-            Route::get('/', [MediaAlbumController::class, 'index']);
-            Route::post('/', [MediaAlbumController::class, 'store']);
-            Route::get('/{id}', [MediaAlbumController::class, 'show']);
-            Route::put('/{id}', [MediaAlbumController::class, 'update']);
-            Route::delete('/{id}', [MediaAlbumController::class, 'destroy']);
-            Route::post('/{id}/add-media', [MediaAlbumController::class, 'addMedia']);
-            Route::post('/{id}/remove-media', [MediaAlbumController::class, 'removeMedia']);
-            Route::post('/{id}/reorder-media', [MediaAlbumController::class, 'reorderMedia']);
-        });
+    // ✅ MEDIA CATEGORIES FIRST
+    Route::prefix('categories')->group(function () {
+        Route::get('/', [MediaCategoryController::class, 'index']);
+        Route::post('/', [MediaCategoryController::class, 'store']);
+        Route::put('/{id}', [MediaCategoryController::class, 'update']);
+        Route::delete('/{id}', [MediaCategoryController::class, 'destroy']);
+        Route::post('/reorder', [MediaCategoryController::class, 'reorder']);
     });
+
+    // ✅ MEDIA ALBUMS
+    Route::prefix('albums')->group(function () {
+        Route::get('/', [MediaAlbumController::class, 'index']);
+        Route::post('/', [MediaAlbumController::class, 'store']);
+        Route::get('/{id}', [MediaAlbumController::class, 'show']);
+        Route::put('/{id}', [MediaAlbumController::class, 'update']);
+        Route::delete('/{id}', [MediaAlbumController::class, 'destroy']);
+        Route::post('/{id}/add-media', [MediaAlbumController::class, 'addMedia']);
+        Route::post('/{id}/remove-media', [MediaAlbumController::class, 'removeMedia']);
+        Route::post('/{id}/reorder-media', [MediaAlbumController::class, 'reorderMedia']);
+    });
+
+    // ✅ MEDIA ITSELF (ID ROUTES LAST)
+    Route::get('/', [MediaController::class, 'index']);
+    Route::post('/upload', [MediaController::class, 'store']);
+    Route::post('/upload-from-url', [MediaController::class, 'uploadFromUrl']);
+    Route::get('/statistics', [MediaController::class, 'statistics']);
+    Route::get('/usage', [MediaController::class, 'getUsageByDate']);
+    Route::get('/{id}', [MediaController::class, 'show']);
+    Route::put('/{id}', [MediaController::class, 'update']);
+    Route::delete('/{id}', [MediaController::class, 'destroy']);
+    Route::get('/{id}/download', [MediaController::class, 'download']);
+    Route::post('/{id}/generate-thumbnail', [MediaController::class, 'generateThumbnail']);
+    Route::post('/{id}/optimize', [MediaController::class, 'optimize']);
+    Route::post('/{id}/move-storage', [MediaController::class, 'moveToStorage']);
+    Route::post('/bulk-delete', [MediaController::class, 'bulkDelete']);
+});
+
 
     // Questions
     Route::prefix('questions')->group(function () {
