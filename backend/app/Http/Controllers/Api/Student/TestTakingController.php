@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\TestTakingService;
 use Illuminate\Http\Request;
 use App\Models\Test;
+use Illuminate\Support\Str;
 use App\Models\Question;
 
 use App\Models\QuestionCategory;
@@ -236,32 +237,33 @@ class TestTakingController extends Controller
     $student = $request->user();
 
     $attempt = TestAttempt::create([
-        'test_id' => null,                 // category-based test
-        'student_id' => $student->id,      
-        'attempt_number' => 1,
-        'started_at' => now(),
-        'completed_at' => now(),
-        'time_spent' => null,
-        'total_questions' => $data['total_questions'],
-        'questions_attempted' => count($data['answers']),
-        'correct_answers' => $data['correct_answers'],
-        'percentage' => $data['percentage'],
-        'score' => $data['percentage'],
-        'status' => 'completed',
-        'answers' => $data['answers'],
-        'result_details' => [
-            'student_name' => $data['student_name'],
-            'age' => $data['age'],
-            'category' => $data['category'],
-        ],
-    ]);
+    'attempt_id' => (string) Str::uuid(), // ✅ REQUIRED FIX
+    'test_id' => null,
+    'student_id' => $student->id,
+    'attempt_number' => 1,
+    'started_at' => now(),
+    'completed_at' => now(),
+    'time_spent' => null,
+    'total_questions' => $data['total_questions'],
+    'questions_attempted' => count($data['answers']),
+    'correct_answers' => $data['correct_answers'],
+    'percentage' => $data['percentage'],
+    'score' => $data['percentage'],
+    'status' => 'completed',
+    'answers' => $data['answers'],
+    'result_details' => [
+        'student_name' => $data['student_name'],
+        'age' => $data['age'],
+        'category' => $data['category'],
+    ],
+]);
+
 
     return response()->json([
-        'success' => true,
-        'attempt_id' => $attempt->id,
-    ]);
+    'success' => true,
+    'attempt_id' => $attempt->id
+
+]);
+
 }
-
-
-
 }

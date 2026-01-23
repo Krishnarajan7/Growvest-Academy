@@ -4,11 +4,13 @@ namespace Database\Seeders;
 
 use App\Models\QuestionCategory;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class QuestionCategorySeeder extends Seeder
 {
     public function run(): void
     {
+        DB::table('question_categories')->truncate();
         $categories = [
             [
                 'name' => 'Spoken English',
@@ -20,11 +22,11 @@ class QuestionCategorySeeder extends Seeder
                 'is_active' => true
             ],
             [
-                'name' => 'Physics',
-                'slug' => 'physics',
+                'name' => 'Phonics Song',
+                'slug' => 'phonics-song',
                 'color' => '#8b5cf6', // purple-500
                 'icon' => 'fa-atom',
-                'description' => 'Basic physics concepts and principles',
+                'description' => 'Basic phonics and songs',
                 'order' => 2,
                 'is_active' => true
             ],

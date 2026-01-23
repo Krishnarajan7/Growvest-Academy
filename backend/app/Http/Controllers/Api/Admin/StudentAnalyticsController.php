@@ -212,7 +212,7 @@ class StudentAnalyticsController extends Controller
     {
         $names = [
             'spoken-english' => 'Spoken English',
-            'physics' => 'Physics',
+            'phonics-song' => 'Phonics Song',
             'general-maths' => 'Mathematics',
             'basic-computer' => 'Computer Basics',
             'general-knowledge' => 'General Knowledge',

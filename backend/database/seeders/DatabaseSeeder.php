@@ -17,9 +17,10 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminSeeder::class,
             AgeGroupSeeder::class,
-            StudentSeeder::class,
+            // StudentSeeder::class,
             QuestionCategorySeeder::class,
-            QuestionSeeder::class,
+            // QuestionSeeder::class,
+            // ProductionContentResetSeeder::class,
             // MediaSeeder::class,
             // ActivityLogSeeder::class,
         ]);

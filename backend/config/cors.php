@@ -11,7 +11,7 @@ return [
         'http://localhost:8081',
         'http://127.0.0.1:8080',
         'http://127.0.0.1:8081',
-        'https://growvestaca.in.com',
+        'https://growvestaca.in',
         'https://www.growvestaca.in',
         'https://api.growvestaca.in',
     ],
@@ -24,6 +24,5 @@ return [
 
     'max_age' => 0,
 
-    // If you are NOT using cookies / Sanctum on frontend, this should be false.
     'supports_credentials' => false,
 ];

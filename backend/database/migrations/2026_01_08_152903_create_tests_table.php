@@ -15,9 +15,9 @@ return new class extends Migration
             $table->string('slug')->unique();
             $table->text('description')->nullable();
             $table->enum('type', ['quiz', 'exam', 'practice', 'assessment']);
-            $table->string('category'); // spoken-english, physics, etc.
-            $table->string('age_group'); // 6-8, 9-11, etc.
-            $table->integer('duration')->nullable(); // in minutes
+            $table->string('category'); 
+            $table->string('age_group'); 
+            $table->integer('duration')->nullable(); 
             $table->integer('total_questions')->default(0);
             $table->integer('passing_score')->default(60);
             $table->integer('max_attempts')->default(1);
