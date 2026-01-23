@@ -48,14 +48,14 @@ const Contact = () => {
       icon: User,
       title: 'General Support',
       description: 'Get help with your account, courses, or general questions',
-      contact: 'Growwithrs25@gmail.com',
+      contact: 'growwithrs25@gmail.com',
       responseTime: 'Usually responds in 2-4 hours'
     },
     {
       icon: BookOpen,
       title: 'Course Support',
       description: 'Need help with course content or technical issues',
-      contact: 'Growwithrs25@gmail.com',
+      contact: 'growwithrs25@gmail.com',
       responseTime: 'Usually responds in 1-2 hours'
     },
     {
@@ -64,7 +64,7 @@ const Contact = () => {
       description: 'Business partnerships, media inquiries, and collaboration',
       contact: 'Growwithrs25@gmail.com',
       responseTime: 'Usually responds in 24-48 hours'
-    }
+    },
   ];
 
   const faqs = [
@@ -212,6 +212,19 @@ const Contact = () => {
                         </a>
                       </div>
                     </div>
+                    <div className="flex items-center">
+  <Phone className="mr-2 flex-shrink-0" size={16} />
+  <div>
+    <p className="text-sm font-medium">Call</p>
+    <a
+      href="tel:+917418991909"
+      className="text-green-100 hover:text-white text-sm"
+    >
+      +91 74189 91909
+    </a>
+  </div>
+</div>
+
                     <div className="flex items-center">
                       <MapPin className="mr-2 flex-shrink-0" size={16} />
                       <div>

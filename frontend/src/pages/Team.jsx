@@ -12,14 +12,14 @@ const Team = () => {
       linkedin: "linkedin.com/in/rajeshkumar",
       phone: "+91 7418991909",
     },
-    {
-      name: "Abubakkersiddiq",
-      role: "Founder & Course Trainer",
-      photo: "/images/abu.jpg",
-      email: "Abubakkarsiddiq0076@gmail.com",
-      linkedin: "linkedin.com/in/priyasharma",
-      phone: "+91 9445238959",
-    },
+    // {
+    //   name: "Abubakkersiddiq",
+    //   role: "Founder & Course Trainer",
+    //   photo: "/images/abu.jpg",
+    //   email: "Abubakkarsiddiq0076@gmail.com",
+    //   linkedin: "linkedin.com/in/priyasharma",
+    //   phone: "+91 9445238959",
+    // },
     {
       name: "Madesh",
       role: "Marketing Head, Co-Founder & Promotion Head",

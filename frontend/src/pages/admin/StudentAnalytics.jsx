@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
-  TableBody,
+  TableBody, 
   TableCell,
   TableHead,
   TableHeader,
@@ -35,28 +35,26 @@ import { adminApi } from "@/lib/axios";
 
 const categories = [
   { id: "spoken-english", name: "Spoken English", color: "#6366f1" },
-  { id: "physics", name: "Physics", color: "#0ea5e9" },
-  { id: "general-maths", name: "Mathematics", color: "#10b981" },
-  { id: "basic-computer", name: "Computer Basics", color: "#8b5cf6" },
+  { id: "phonics-song",   name: "Phonics Song",   color: "#0ea5e9" },
+  { id: "general-maths",  name: "Mathematics",    color: "#10b981" },
+  { id: "basic-computer", name: "Computer Basics",color: "#8b5cf6" },
   { id: "general-knowledge", name: "General Knowledge", color: "#f59e0b" }, 
   { id: "public-speaking", name: "Public Speaking", color: "#ec4899" },
 ];
-
 
 const ageGroups = ["6-8 years", "9-11 years", "12-14 years", "15-16 years"];
 
 const getCategoryKey = (catId) => {
   const map = {
-    "spoken-english": "spokenEnglish",
-    physics: "physics",
-    "general-maths": "maths",
-    "basic-computer": "computer",
+    "spoken-english":    "spokenEnglish",
+    "phonics-song":      "phonicsSong",
+    "general-maths":     "maths",
+    "basic-computer":    "computer",
     "general-knowledge": "gk",
-    "public-speaking": "publicSpeaking",
+    "public-speaking":   "publicSpeaking",
   };
   return map[catId] || null;
 };
-
 
 const getScoreColor = (score) => {
   if (score >= 90) return "text-emerald-600 dark:text-emerald-400";
@@ -67,8 +65,8 @@ const getScoreColor = (score) => {
 
 const getPerformanceBadge = (score) => {
   if (score >= 90) return { label: "Outstanding", variant: "default" };
-  if (score >= 80) return { label: "Excellent", variant: "secondary" };
-  if (score >= 70) return { label: "Good", variant: "outline" };
+  if (score >= 80) return { label: "Excellent",   variant: "secondary" };
+  if (score >= 70) return { label: "Good",        variant: "outline" };
   return { label: "Needs Work", variant: "destructive" };
 };
 
@@ -88,78 +86,76 @@ export default function StudentAnalytics() {
 
   useEffect(() => {
     const fetchAllData = async () => {
-  try {
-    setLoading(true);
-    setError(null);
+      try {
+        setLoading(true);
+        setError(null);
 
-   const [
-  studentsRes,
-  statsRes,
-  categoryRes,
-  ageGroupRes,
-  trendsRes,
-  topRes,
-] = await Promise.all([
-  adminApi.getStudentAnalyticsList(),
-  adminApi.getStudentAnalyticsStats(),
-  adminApi.getStudentCategoryPerformance(),
-  adminApi.getStudentAgeGroups(),
-  adminApi.getStudentMonthlyTrends(),
-  adminApi.getTopPerformers(),
-]);
+        const [
+          studentsRes,
+          statsRes,
+          categoryRes,
+          ageGroupRes,
+          trendsRes,
+          topRes,
+        ] = await Promise.all([
+          adminApi.getStudentAnalyticsList(),
+          adminApi.getStudentAnalyticsStats(),
+          adminApi.getStudentCategoryPerformance(),
+          adminApi.getStudentAgeGroups(),
+          adminApi.getStudentMonthlyTrends(),
+          adminApi.getTopPerformers(),
+        ]);
 
-const studentsData = studentsRes?.data ?? [];
-const statsData = statsRes?.data ?? {};
-const categoryData = categoryRes?.data ?? [];
-const ageGroupData = ageGroupRes?.data ?? [];
-const trendsData = trendsRes?.data ?? [];
-const topData = topRes?.data ?? [];
+        const studentsData = studentsRes?.data ?? [];
+        const statsData   = statsRes?.data ?? {};
+        const categoryData = categoryRes?.data ?? [];
+        const ageGroupData = ageGroupRes?.data ?? [];
+        const trendsData   = trendsRes?.data ?? [];
+        const topData      = topRes?.data ?? [];
 
+        setQuickStats({
+          totalStudents: statsData?.overall_stats?.total_students ?? 0,
+          overallAverage: statsData?.overall_stats?.avg_score_overall ?? 0,
+          totalTests: statsData?.overall_stats?.total_tests_taken ?? 0,
+          ninetyPlusCount: statsData?.overall_stats?.ninety_plus ?? 0,
+        });
 
-    setQuickStats({
-      totalStudents: statsData?.overall_stats?.total_students ?? 0,
-      overallAverage: statsData?.overall_stats?.avg_score_overall ?? 0,
-      totalTests: statsData?.overall_stats?.total_tests_taken ?? 0,
-      ninetyPlusCount: statsData?.overall_stats?.ninety_plus ?? 0,
-    });
+        setStudents(
+          Array.isArray(studentsData)
+            ? studentsData.map((s) => ({
+                id: s.id,
+                name: s.name || "Unknown",
+                age: s.age || "Unknown",
+                avgScore: s.avg_score ?? 0,
+                testsCompleted: s.tests_completed ?? 0,
 
-    setStudents(
-  Array.isArray(studentsData)
-    ? studentsData.map((s) => ({
-        id: s.id,
-        name: s.name || "Unknown",
-        age: s.age || "Unknown",
-        avgScore: s.avg_score ?? 0,
-        testsCompleted: s.tests_completed ?? 0,
+                spokenEnglish: s.spoken_english ?? 0,
+                phonicsSong:   s.phonics_song    ?? 0,
+                maths:         s.general_maths   ?? 0,
+                computer:      s.basic_computer  ?? 0,
+                gk:            s.general_knowledge ?? 0,
+                publicSpeaking:s.public_speaking ?? 0,
+              }))
+            : []
+        );
 
-        spokenEnglish: s.spoken_english ?? 0,
-        physics: s.physics ?? 0,
-        maths: s.general_maths ?? 0,
-        computer: s.basic_computer ?? 0,
-        gk: s.general_knowledge ?? 0,
-        publicSpeaking: s.public_speaking ?? 0,
-      }))
-    : []
-);
+        setCategoryAverages(Array.isArray(categoryData) ? categoryData : []);
+        setAgeGroupPerformance(Array.isArray(ageGroupData) ? ageGroupData : []);
+        setMonthlyTrends(Array.isArray(trendsData) ? trendsData : []);
+        setTopPerformers(Array.isArray(topData) ? topData : []);
 
-    setCategoryAverages(Array.isArray(categoryData) ? categoryData : []);
-    setAgeGroupPerformance(Array.isArray(ageGroupData) ? ageGroupData : []);
-    setMonthlyTrends(Array.isArray(trendsData) ? trendsData : []);
-    setTopPerformers(Array.isArray(topData) ? topData : []);
-
-  } catch (err) {
-    console.error("Analytics fetch error:", err);
-    const errorMessage =
-      err.response?.data?.message ||
-      err.message ||
-      "Failed to load analytics data";
-    setError(errorMessage);
-    toast.error(errorMessage);
-  } finally {
-    setLoading(false);
-  }
-};
-
+      } catch (err) {
+        console.error("Analytics fetch error:", err);
+        const errorMessage =
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to load analytics data";
+        setError(errorMessage);
+        toast.error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchAllData();
   }, []);
@@ -177,7 +173,7 @@ const topData = topRes?.data ?? [];
     return matchesSearch && matchesAge;
   });
 
-  // Radar chart data (also safe)
+  // Radar chart data
   const radarData = categories.map((cat) => {
     const key = getCategoryKey(cat.id);
     const avg =
@@ -318,7 +314,7 @@ const topData = topRes?.data ?? [];
           </CardContent>
         </Card>
 
-        {/* Age Group Comparison - IMPORTANT: dataKey must match your backend field */}
+        {/* Age Group Comparison */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -331,11 +327,11 @@ const topData = topRes?.data ?? [];
               <ResponsiveContainer>
                 <BarChart data={ageGroupPerformance} margin={{ top: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.6} />
-                  <XAxis dataKey="age_group" tick={{ fontSize: 12 }} /> {/* ← changed from ageGroup */}
+                  <XAxis dataKey="age_group" tick={{ fontSize: 12 }} />
                   <YAxis domain={[0, 100]} />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="avg_score" name="Avg Score" fill="#6366f1" radius={[4, 4, 0, 0]} /> {/* ← changed */}
+                  <Bar dataKey="avg_score" name="Avg Score" fill="#6366f1" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="students" name="Students" fill="#9ca3af" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -483,7 +479,7 @@ const topData = topRes?.data ?? [];
                   <TableHead className="hidden sm:table-cell">Age</TableHead>
                   <TableHead>Avg Score</TableHead>
                   <TableHead className="hidden md:table-cell">English</TableHead>
-                  <TableHead className="hidden md:table-cell">Physics</TableHead>
+                  <TableHead className="hidden md:table-cell">Phonics</TableHead>
                   <TableHead className="hidden lg:table-cell">Maths</TableHead>
                   <TableHead className="hidden lg:table-cell">Computer</TableHead>
                   <TableHead className="hidden xl:table-cell">GK</TableHead>
@@ -505,8 +501,8 @@ const topData = topRes?.data ?? [];
                     <TableCell className={`hidden md:table-cell ${getScoreColor(student.spokenEnglish)}`}>
                       {student.spokenEnglish ?? "—"}%
                     </TableCell>
-                    <TableCell className={`hidden md:table-cell ${getScoreColor(student.physics)}`}>
-                      {student.physics ?? "—"}%
+                    <TableCell className={`hidden md:table-cell ${getScoreColor(student.phonicsSong)}`}>
+                      {student.phonicsSong ?? "—"}%
                     </TableCell>
                     <TableCell className={`hidden lg:table-cell ${getScoreColor(student.maths)}`}>
                       {student.maths ?? "—"}%

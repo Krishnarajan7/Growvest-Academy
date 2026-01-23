@@ -37,8 +37,8 @@ const categoryConfig = {
     bgColor: 'bg-pink-50',
     emoji: '🎤',
   },
-  'physics': {
-    title: 'Physics',
+  'Phonics-song': {
+    title: 'phonics-song',
     icon: Atom,
     color: 'from-blue-500 to-cyan-600',
     bgColor: 'bg-blue-50',

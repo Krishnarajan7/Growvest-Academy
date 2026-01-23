@@ -95,6 +95,8 @@ export default function TestQuestions() {
         adminApi.getAgeGroups(),
       ]);
 
+      console.log("Category API response:", catRes.data);
+
       setCategories(
         (catRes.data.categories || []).map((cat) => ({
           name: cat.name,

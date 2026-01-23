@@ -4,14 +4,13 @@ import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import {
   Mic,
-  Atom,
+  Sparkles,           // ← changed from Atom
   Calculator,
   Monitor,
   Globe,
   Megaphone,
   Star,
   Trophy,
-  Sparkles,
   ArrowRight,
   Play,
   Target,
@@ -40,16 +39,16 @@ const CATEGORY_UI_MAP = {
     duration: '15 mins',
     difficulty: 'Beginner',
   },
-  physics: {
-    subtitle: 'Explore the Universe',
-    description: 'Discover the amazing world of physics through exciting experiments and concepts',
-    icon: Atom,
-    color: 'from-blue-500 to-cyan-600',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-300',
-    hoverBg: 'hover:bg-blue-100',
-    duration: '20 mins',
-    difficulty: 'Intermediate',
+  'phonics-song': {                               // ← replaced physics
+    subtitle: 'Sing & Learn Sounds',
+    description: 'Catchy songs and games to master letter sounds, blending and early reading',
+    icon: Sparkles,
+    color: 'from-cyan-500 to-blue-600',
+    bgColor: 'bg-cyan-50',
+    borderColor: 'border-cyan-300',
+    hoverBg: 'hover:bg-cyan-100',
+    duration: '18 mins',
+    difficulty: 'Beginner',
   },
   'general-maths': {
     subtitle: 'Numbers are Fun',
@@ -122,34 +121,33 @@ const SuperKids = () => {
   }, []);
 
   useEffect(() => {
-  const fetchCategories = async () => {
-    try {
-      const response = await api.get('/super-kids/categories');
+    const fetchCategories = async () => {
+      try {
+        const response = await api.get('/super-kids/categories');
 
-const categoriesData = Array.isArray(response.categories)
-  ? response.categories
-  : Array.isArray(response.data)
-  ? response.data
-  : [];
+        const categoriesData = Array.isArray(response.categories)
+          ? response.categories
+          : Array.isArray(response.data)
+          ? response.data
+          : [];
 
-const mappedCategories = categoriesData.map((cat) => ({
-  id: cat.slug,
-  title: cat.name,
-  questions: cat.question_count || 0,
-  ...(CATEGORY_UI_MAP[cat.slug] || {}),
-}));
+        const mappedCategories = categoriesData.map((cat) => ({
+          id: cat.slug,
+          title: cat.name,
+          questions: cat.question_count || 0,
+          ...(CATEGORY_UI_MAP[cat.slug] || {}),
+        }));
 
-setCategories(mappedCategories);
+        setCategories(mappedCategories);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchCategories();
-}, []);
+    fetchCategories();
+  }, []);
 
   // Confetti on card hover
   const triggerConfetti = useCallback((e) => {
@@ -174,31 +172,29 @@ setCategories(mappedCategories);
   };
 
   const handleModalSubmit = async (studentData) => {
-  try {
-    const res = await api.post('/student/guest/enter', {
-  name: studentData.name,
-  age: studentData.age,
-});
+    try {
+      const res = await api.post('/student/guest/enter', {
+        name: studentData.name,
+        age: studentData.age,
+      });
 
-const { token, student } = res; 
+      const { token, student } = res; 
 
+      // Store token & student
+      localStorage.setItem('student_token', token);
+      localStorage.setItem('student_data', JSON.stringify(student));
 
-    // 2. Store token & student
-    localStorage.setItem('student_token', token);
-    localStorage.setItem('student_data', JSON.stringify(student));
+      // Close modal
+      setIsModalOpen(false);
 
-    // 3. Close modal
-    setIsModalOpen(false);
-
-    // 4. Navigate to category test page
-    if (selectedCategory) {
-      navigate(`/super-kids/${selectedCategory.id}`);
+      // Navigate to category test page
+      if (selectedCategory) {
+        navigate(`/super-kids/${selectedCategory.id}`);
+      }
+    } catch (error) {
+      console.error('Guest registration failed', error);
     }
-  } catch (error) {
-    console.error('Guest registration failed', error);
-  }
-};
-
+  };
 
   // Animation variants
   const containerVariants = {

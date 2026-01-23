@@ -32,14 +32,15 @@ const Footer = () => {
                 <span>Instagram</span>
               </a>
               <a
-                href="https://chat.whatsapp.com/DU3aiu3CLy15dt6eVGW91K?mode=ac_t"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center space-x-2 text-gray-400 hover:text-green-400 transition-colors"
-              >
-                <MessageCircle size={20} />
-                <span>WhatsApp</span>
-              </a>
+  href="https://wa.me/917702332472"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="flex items-center space-x-2 text-gray-400 hover:text-green-400 transition-colors"
+>
+  <MessageCircle size={20} />
+  <span>WhatsApp</span>
+</a>
+
             </div>
           </div>
 
