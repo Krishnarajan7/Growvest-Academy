@@ -50,7 +50,7 @@ export default function AdminMedia() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    categoryId: "", // ← MUST be empty string for Radix Select
+    categoryId: "",
     file: null,
   });
   const [dragActive, setDragActive] = useState(false);
@@ -107,18 +107,16 @@ export default function AdminMedia() {
     api
       .get("/admin/media/categories")
       .then((res) => {
-        const cats = res.data.data || [];
-        setCategoryOptions(cats);
+        const cats =
+          res?.data?.data?.data ??
+          res?.data?.data ??
+          res?.data ??
+          [];
 
-        // Optional: auto-select first category (usually General)
-        if (cats.length > 0 && !formData.categoryId) {
-          setFormData((prev) => ({
-            ...prev,
-            categoryId: String(cats[0].id),
-          }));
-        }
+        setCategoryOptions(Array.isArray(cats) ? cats : []);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error(err);
         toast.error("Failed to load media categories");
       });
   }, []);
@@ -154,7 +152,7 @@ export default function AdminMedia() {
     setFormData({
       title: "",
       description: "",
-      categoryId: "", // ← empty string
+      categoryId: "",
       file: null,
     });
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -312,7 +310,8 @@ export default function AdminMedia() {
               Upload New
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-lg overflow-hidden">
+
             <DialogHeader>
               <DialogTitle>Upload New Media</DialogTitle>
               <DialogDescription>
@@ -366,11 +365,17 @@ export default function AdminMedia() {
                     }}
                   />
                   {formData.file ? (
-                    <div className="space-y-2">
-                      <p className="font-medium">{formData.file.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {(formData.file.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
+                    <div className="flex flex-col items-center gap-3 py-2">
+                      <div className="w-full max-w-full px-4">
+                        <p className="font-medium text-sm break-all max-w-full">
+  {formData.file.name}
+</p>
+
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {(formData.file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+
                       <Button
                         variant="outline"
                         size="sm"
@@ -413,7 +418,7 @@ export default function AdminMedia() {
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
-                  <SelectContent position="popper" className="z-50">
+                  <SelectContent className="z-[9999]">
                     {categoryOptions.map((cat) => (
                       <SelectItem key={cat.id} value={String(cat.id)}>
                         {cat.name}
@@ -487,11 +492,11 @@ export default function AdminMedia() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-6 sm:gap-7 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
+        <div className="grid gap-6 sm:gap-7 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 auto-rows-fr">
           {filteredMedia.map((item) => (
             <Card
               key={item.id}
-              className="overflow-hidden group hover:shadow-xl transition-all duration-300 border flex flex-col min-h-[420px] sm:min-h-[460px]"
+              className="overflow-hidden group hover:shadow-xl transition-all duration-300 border flex flex-col h-full"
             >
               <div className="relative aspect-[4/3] sm:aspect-video bg-muted/60">
                 {item.type === "video" ? (
@@ -544,7 +549,7 @@ export default function AdminMedia() {
               </div>
 
               <CardContent className="p-5 flex flex-col flex-grow">
-                <h3 className="font-semibold line-clamp-2 text-lg leading-tight mb-3">
+                <h3 className="font-semibold text-lg leading-tight mb-2 line-clamp-2 break-words">
                   {item.title}
                 </h3>
 
@@ -562,7 +567,7 @@ export default function AdminMedia() {
                 {item.category && item.category !== "General" && (
                   <Badge
                     variant="outline"
-                    className="mt-4 self-start text-xs sm:text-sm px-3 py-1"
+                    className="mt-3 self-start text-xs px-2 py-0.5 truncate max-w-full"
                   >
                     {item.category}
                   </Badge>
@@ -609,7 +614,7 @@ export default function AdminMedia() {
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
-                <SelectContent position="popper" className="z-50">
+                <SelectContent className="z-[9999]">
                   {categoryOptions.map((cat) => (
                     <SelectItem key={cat.id} value={String(cat.id)}>
                       {cat.name}

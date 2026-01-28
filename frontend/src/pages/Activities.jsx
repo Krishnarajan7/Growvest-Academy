@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Play,
   Image as ImageIcon,
@@ -15,24 +15,44 @@ import { publicApi } from '@/lib/axios';
 const Activities = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [media, setMedia] = useState([]);
+  const [categories, setCategories] = useState([{ slug: 'all', name: 'All Media' }]);
   const [loading, setLoading] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState(null);
+  const isFetchingRef = useRef(false);
 
-  const categories = [
-    { id: 'all', name: 'All Media' },
-    { id: 'events', name: 'Events' },
-    { id: 'workshops', name: 'Workshops' },
-    { id: 'achievements', name: 'Achievements' },
-  ];
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await publicApi.getPublicCategories();
 
-  const stats = [
-    { icon: Camera, value: '500+', label: 'Photos Captured' },
-    { icon: Film, value: '50+', label: 'Videos Produced' },
-    { icon: Award, value: '30+', label: 'Events Conducted' },
-  ];
+        const cats =
+          res?.data?.data?.data ??
+          res?.data?.data ??
+          res?.data ??
+          [];
+
+        const formatted = cats.map((cat) => ({
+          slug: cat.slug,
+          name: cat.name,
+        })).sort((a, b) => a.name.localeCompare(b.name));
+
+        setCategories([
+          { slug: 'all', name: 'All Media' },
+          ...formatted,
+        ]);
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const fetchMedia = async () => {
+      if (isFetchingRef.current) return;
+      isFetchingRef.current = true;
+
       setLoading(true);
       try {
         const params = {};
@@ -41,13 +61,13 @@ const Activities = () => {
         }
 
         const res = await publicApi.getPublicMedia(params);
-        // Support both paginated and non-paginated responses
         const items = res.data?.data?.data || res.data?.data || [];
         setMedia(items);
       } catch (error) {
         console.error('Failed to load media:', error);
       } finally {
         setLoading(false);
+        isFetchingRef.current = false;
       }
     };
 
@@ -73,9 +93,14 @@ const Activities = () => {
     duration: item.duration || null,
   }));
 
+  const stats = [
+    { icon: Camera, value: '500+', label: 'Photos Captured' },
+    { icon: Film, value: '50+', label: 'Videos Produced' },
+    { icon: Award, value: '30+', label: 'Events Conducted' },
+  ];
+
   return (
     <div className="min-h-screen pt-20 bg-background">
-      {/* Hero Section */}
       <section className="py-16 md:py-24 bg-muted/30 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent" />
 
@@ -96,7 +121,6 @@ const Activities = () => {
             </p>
           </div>
 
-          {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mt-12 max-w-4xl mx-auto">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
@@ -115,16 +139,15 @@ const Activities = () => {
         </div>
       </section>
 
-      {/* Category Filter */}
-      <section className="py-6 border-b border-border bg-background sticky top-0 z-10">
+      <section className="py-6 border-b border-border bg-background">
         <div className="container-width section-padding">
           <div className="flex flex-wrap justify-center gap-2">
             {categories.map((category) => {
-              const isActive = selectedCategory === category.id;
+              const isActive = selectedCategory === category.slug;
               return (
                 <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
+                  key={category.slug}
+                  onClick={() => setSelectedCategory(category.slug)}
                   className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
                     isActive
                       ? 'bg-primary text-primary-foreground shadow-md'
@@ -139,17 +162,16 @@ const Activities = () => {
         </div>
       </section>
 
-      {/* Gallery */}
       <section className="py-12 md:py-16">
         <div className="container-width section-padding">
           {loading ? (
             <div className="text-center py-20 text-muted-foreground">Loading media...</div>
           ) : galleryItems.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">
-              No media found {selectedCategory !== 'all' ? `in ${selectedCategory}` : 'yet'}.
+              No media found {selectedCategory !== 'all' ? `in this category` : 'yet'}.
             </div>
           ) : (
-            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
+            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8 auto-rows-fr">
               {galleryItems.map((item) => (
                 <Card
                   key={item.id}
@@ -161,13 +183,12 @@ const Activities = () => {
                     shadow-sm hover:shadow-xl 
                     transition-all duration-300 
                     cursor-pointer 
-                    flex flex-col
+                    flex flex-col h-full
                     backdrop-blur-sm
                     hover:-translate-y-1
                   "
                   onClick={() => setSelectedMedia(item.id)}
                 >
-                  {/* Media Container */}
                   <div className="relative aspect-[4/3] overflow-hidden flex-shrink-0">
                     <img
                       src={item.thumbnail}
@@ -182,10 +203,8 @@ const Activities = () => {
                       }}
                     />
 
-                    {/* Gradient Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent/0 pointer-events-none" />
 
-                    {/* Play button for videos */}
                     {item.type === 'video' && (
                       <div className="
                         absolute inset-0 
@@ -208,7 +227,6 @@ const Activities = () => {
                       </div>
                     )}
 
-                    {/* Duration badge */}
                     {item.duration && (
                       <div className="
                         absolute bottom-3 right-3 
@@ -224,16 +242,17 @@ const Activities = () => {
                       </div>
                     )}
 
-                    {/* Category badge */}
                     <div className="
                       absolute top-3 left-3 
-                      px-2.5 py-1 
+                      max-w-[85%]
+                      px-2 py-0.5 
                       bg-background/80 backdrop-blur-md 
                       border border-border/50
                       text-foreground/90 text-xs font-medium 
                       rounded-md 
                       flex items-center gap-1.5
                       shadow-sm
+                      truncate
                     ">
                       {item.type === 'video' ? (
                         <Film className="w-3.5 h-3.5" />
@@ -244,7 +263,6 @@ const Activities = () => {
                     </div>
                   </div>
 
-                  {/* Content */}
                   <div className="p-5 flex flex-col flex-grow">
                     <h3 className="
                       font-semibold text-lg leading-tight 
@@ -268,7 +286,6 @@ const Activities = () => {
                       </p>
                     )}
 
-                    {/* Meta row */}
                     <div className="
                       flex items-center justify-between 
                       text-xs text-muted-foreground/80
@@ -294,7 +311,6 @@ const Activities = () => {
         </div>
       </section>
 
-      {/* Modal */}
       {selectedMedia && (
         <div
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
