@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
             // StudentSeeder::class,
             QuestionCategorySeeder::class,
             // QuestionSeeder::class,
-            // ProductionContentResetSeeder::class,
+            ProductionContentResetSeeder::class,
             // MediaSeeder::class,
             // ActivityLogSeeder::class,
         ]);

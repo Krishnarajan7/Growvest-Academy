@@ -98,7 +98,7 @@ Route::prefix('students')->middleware(['auth:admin'])->group(function () {
     // Media
    Route::prefix('media')->group(function () {
 
-    // ✅ MEDIA CATEGORIES FIRST
+    // MEDIA CATEGORIES FIRST
     Route::prefix('categories')->group(function () {
         Route::get('/', [MediaCategoryController::class, 'index']);
         Route::post('/', [MediaCategoryController::class, 'store']);
@@ -107,7 +107,7 @@ Route::prefix('students')->middleware(['auth:admin'])->group(function () {
         Route::post('/reorder', [MediaCategoryController::class, 'reorder']);
     });
 
-    // ✅ MEDIA ALBUMS
+    // MEDIA ALBUMS
     Route::prefix('albums')->group(function () {
         Route::get('/', [MediaAlbumController::class, 'index']);
         Route::post('/', [MediaAlbumController::class, 'store']);
@@ -119,7 +119,7 @@ Route::prefix('students')->middleware(['auth:admin'])->group(function () {
         Route::post('/{id}/reorder-media', [MediaAlbumController::class, 'reorderMedia']);
     });
 
-    // ✅ MEDIA ITSELF (ID ROUTES LAST)
+    // MEDIA ITSELF (ID ROUTES LAST)
     Route::get('/', [MediaController::class, 'index']);
     Route::post('/upload', [MediaController::class, 'store']);
     Route::post('/upload-from-url', [MediaController::class, 'uploadFromUrl']);

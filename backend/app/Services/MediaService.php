@@ -227,7 +227,8 @@ class MediaService
             ->read($file->getPathname())
             ->cover(300, 300);
 
-        $thumbnailPath = 'thumbnails/' . basename($filePath);
+        $thumbnailPath = dirname($filePath) . '/thumbnails/' . basename($filePath);
+
         Storage::disk($this->getStorageDriver())->put(
             $thumbnailPath,
             (string) $thumbnail->toJpeg(quality: 85)
@@ -260,9 +261,11 @@ class MediaService
                 'duration' => $duration
             ];
 
-            $thumbnailPath = 'thumbnails/video_' . basename($filePath) . '.jpg';
+            $thumbnailPath = dirname($filePath) . '/thumbnails/video_' . basename($filePath) . '.jpg';
             $frame = $video->frame(TimeCode::fromSeconds(5));
-            $frame->save(storage_path('app/' . $thumbnailPath));
+$frame->save(
+    Storage::disk($this->getStorageDriver())->path($thumbnailPath)
+);
 
             $result['thumbnail_url'] = $this->getFileUrl($thumbnailPath);
 
@@ -306,16 +309,14 @@ class MediaService
             return [];
         }
     }
+private function getFileUrl($path, $driver = null)
+{
+    $driver = $driver ?? $this->getStorageDriver();
+    return Storage::disk($driver)->url($path);
+}
 
-    private function getFileUrl($path, $driver = null)
-    {
-        $driver = $driver ?? $this->getStorageDriver();
-        return match ($driver) {
-            's3' => Storage::disk('s3')->url($path),
-            'public' => rtrim(config('app.url'), '/') . Storage::url($path),
-            default => asset('storage/' . $path),
-        };
-    }
+
+
 
     private function getCDNUrl($path)
     {
