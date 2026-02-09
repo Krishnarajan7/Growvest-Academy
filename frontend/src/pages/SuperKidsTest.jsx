@@ -37,7 +37,7 @@ const categoryConfig = {
     bgColor: 'bg-pink-50',
     emoji: '🎤',
   },
-  'Phonics-song': {
+  'phonics-song': {
     title: 'phonics-song',
     icon: Atom,
     color: 'from-blue-500 to-cyan-600',
@@ -58,13 +58,14 @@ const categoryConfig = {
     bgColor: 'bg-purple-50',
     emoji: '💻',
   },
-  'gk': {
-    title: 'General Knowledge',
-    icon: Globe,
-    color: 'from-orange-500 to-amber-600',
-    bgColor: 'bg-orange-50',
-    emoji: '🌍',
-  },
+  'general-knowledge': {
+  title: 'General Knowledge',
+  icon: Globe,
+  color: 'from-orange-500 to-amber-600',
+  bgColor: 'bg-orange-50',
+  emoji: '🌍',
+},
+
   'public-speaking': {
     title: 'Public Speaking',
     icon: Megaphone,

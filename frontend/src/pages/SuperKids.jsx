@@ -39,7 +39,7 @@ const CATEGORY_UI_MAP = {
     duration: '15 mins',
     difficulty: 'Beginner',
   },
-  'phonics-song': {                               // ← replaced physics
+  'phonics-song': {                               
     subtitle: 'Sing & Learn Sounds',
     description: 'Catchy songs and games to master letter sounds, blending and early reading',
     icon: Sparkles,
@@ -72,7 +72,7 @@ const CATEGORY_UI_MAP = {
     duration: '15 mins',
     difficulty: 'Beginner',
   },
-  gk: {
+  'general-knowledge': {
     subtitle: 'Know Everything',
     description: 'Explore fascinating facts about the world, history, science, and more',
     icon: Globe,
@@ -189,6 +189,7 @@ const SuperKids = () => {
 
       // Navigate to category test page
       if (selectedCategory) {
+        console.log("Navigating to:", selectedCategory.id);
         navigate(`/super-kids/${selectedCategory.id}`);
       }
     } catch (error) {

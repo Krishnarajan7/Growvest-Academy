@@ -69,14 +69,32 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-          <p className="text-gray-400">
-            © {new Date().getFullYear()} Growvest Academy. All rights reserved. Empowering financial growth through education.
-          </p>
-          <p className="text-gray-500 text-sm mt-2">
-            Investment education • Mutual Fund Guidance • Personal Finance Growth
-          </p>
-        </div>
+        <div className="border-t border-gray-800 mt-8 pt-8 text-center space-y-3">
+  <p className="text-gray-400">
+    © {new Date().getFullYear()} Growvest Academy. All rights reserved. Empowering financial growth through education.
+  </p>
+
+  <p className="text-gray-500 text-sm">
+    Investment education • Mutual Fund Guidance • Personal Finance Growth
+  </p>
+
+  {/* Powered By */}
+  <a
+    href="https://360astra.io"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="flex justify-center items-center space-x-2 text-gray-400 hover:text-green-400 transition-colors"
+  >
+    <span className="text-sm">Website by</span>
+    <img
+  src="/images/360astra.png"
+  alt="360Astra"
+  className="h-6 w-6 object-contain hover:scale-105 transition-transform"
+/>
+
+  </a>
+</div>
+
       </div>
     </footer>
   );
