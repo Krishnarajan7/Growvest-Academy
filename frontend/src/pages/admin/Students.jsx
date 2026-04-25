@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,8 +22,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Pencil, Trash2, Users, Copy, Eye, EyeOff, Download, RefreshCw } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Users, Copy, Eye, EyeOff, Download, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { adminApi } from "@/lib/axios";
 
 const ageGroups = [
   { value: "6-8", label: "6-8 Years" },
@@ -32,90 +33,9 @@ const ageGroups = [
   { value: "15-16", label: "15-16 Years" },
 ];
 
-const generateUsername = (firstName, lastName) => {
-  const base = `${firstName.toLowerCase().replace(/\s/g, '')}${lastName.charAt(0).toLowerCase()}`;
-  const random = Math.floor(Math.random() * 1000);
-  return `${base}${random}`;
-};
-
-const generatePassword = () => {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#$";
-  let password = "";
-  for (let i = 0; i < 10; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return password;
-};
-
-const initialStudents = [
-  { 
-    id: 1, 
-    firstName: "Arun", 
-    lastName: "Kumar", 
-    email: "arun@email.com", 
-    phone: "+91 9876543210", 
-    age: 10,
-    ageGroup: "9-11",
-    school: "Delhi Public School",
-    parentName: "Vikram Kumar",
-    parentPhone: "+91 9876543220",
-    username: "arunk123",
-    password: "Abc@12345",
-    status: "Active", 
-    enrolledDate: "Jan 5, 2026" 
-  },
-  { 
-    id: 2, 
-    firstName: "Priya", 
-    lastName: "Sharma", 
-    email: "priya@email.com", 
-    phone: "+91 9876543211", 
-    age: 8,
-    ageGroup: "6-8",
-    school: "Modern School",
-    parentName: "Anjali Sharma",
-    parentPhone: "+91 9876543221",
-    username: "priyas456",
-    password: "Xyz@78901",
-    status: "Active", 
-    enrolledDate: "Jan 4, 2026" 
-  },
-  { 
-    id: 3, 
-    firstName: "Rahul", 
-    lastName: "Verma", 
-    email: "rahul@email.com", 
-    phone: "+91 9876543212", 
-    age: 14,
-    ageGroup: "12-14",
-    school: "Kendriya Vidyalaya",
-    parentName: "Suresh Verma",
-    parentPhone: "+91 9876543222",
-    username: "rahulv789",
-    password: "Pqr@45678",
-    status: "Pending", 
-    enrolledDate: "Jan 3, 2026" 
-  },
-  { 
-    id: 4, 
-    firstName: "Sneha", 
-    lastName: "Patel", 
-    email: "sneha@email.com", 
-    phone: "+91 9876543213", 
-    age: 16,
-    ageGroup: "15-16",
-    school: "St. Xavier's High School",
-    parentName: "Rajesh Patel",
-    parentPhone: "+91 9876543223",
-    username: "snehap234",
-    password: "Lmn@67890",
-    status: "Active", 
-    enrolledDate: "Jan 2, 2026" 
-  },
-];
-
 export default function AdminStudents() {
-  const [students, setStudents] = useState(initialStudents);
+  const [students, setStudents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterAgeGroup, setFilterAgeGroup] = useState("all");
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -123,6 +43,18 @@ export default function AdminStudents() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showPasswords, setShowPasswords] = useState({});
+  const [pagination, setPagination] = useState({
+    page: 1,
+    perPage: 15,
+    total: 0,
+    lastPage: 1
+  });
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    pending: 0,
+    inactive: 0,
+  });
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -182,101 +114,151 @@ export default function AdminStudents() {
     }
   };
 
-  const filteredStudents = students.filter((student) => {
-    const matchesSearch = 
-      student.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.username.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesAgeGroup = filterAgeGroup === "all" || student.ageGroup === filterAgeGroup;
-    return matchesSearch && matchesAgeGroup;
-  });
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const response = await adminApi.getStudents({
+        page: pagination.page,
+        per_page: pagination.perPage,
+        search: searchQuery,
+        ...(filterAgeGroup !== "all" && { age_group: filterAgeGroup })
+      });
+      
+      if (response.success) {
+        setStudents(response.data.data);
+        setPagination(prev => ({
+          ...prev,
+          total: response.data.total,
+          lastPage: response.data.last_page
+        }));
+      }
 
-  const handleAddStudent = () => {
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.ageGroup) {
+      try {
+        const statsResponse = await adminApi.getStudentStatistics();
+        if (statsResponse.success) {
+          setStats({
+            total: statsResponse.data.total_students || response.data.total || 0,
+            active: statsResponse.data.status_breakdown?.active || 0,
+            pending: statsResponse.data.status_breakdown?.pending || 0,
+            inactive: statsResponse.data.status_breakdown?.inactive || 0,
+          });
+        }
+      } catch (err) {
+        // Fallback to pagination total if stats API fails
+        setStats(prev => ({ ...prev, total: response.data.total || 0 }));
+      }
+    } catch (error) {
+      toast.error("Failed to fetch students");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [pagination.page, pagination.perPage, filterAgeGroup]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (pagination.page !== 1) {
+        setPagination(prev => ({ ...prev, page: 1 }));
+      } else {
+        fetchData();
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleAddStudent = async () => {
+    if (!formData.firstName || !formData.lastName || !formData.ageGroup) {
       toast.error("Please fill all required fields");
       return;
     }
-    if (!generatedCredentials) {
-      toast.error("Credentials not generated. Please enter first and last name.");
-      return;
+
+    try {
+      const response = await adminApi.createStudent({
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        age_group: formData.ageGroup,
+        parent_name: formData.parentName,
+        parent_phone: formData.parentPhone,
+        status: formData.status.toLowerCase(),
+        password: generatedCredentials?.password,
+        username: generatedCredentials?.username
+      });
+
+      if (response.success) {
+        toast.success("Student created successfully!");
+        fetchData();
+        setIsAddOpen(false);
+        resetForm();
+      }
+    } catch (error) {
+      toast.error(error.message || "Failed to create student");
     }
-
-    const newStudent = {
-      id: Math.max(...students.map(s => s.id), 0) + 1,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      phone: formData.phone,
-      age: Number(formData.age) || 0,
-      ageGroup: formData.ageGroup,
-      school: formData.school,
-      parentName: formData.parentName,
-      parentPhone: formData.parentPhone,
-      username: generatedCredentials.username,
-      password: generatedCredentials.password,
-      status: formData.status,
-      enrolledDate: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-    };
-
-    setStudents([newStudent, ...students]);
-    resetForm();
-    setIsAddOpen(false);
-    toast.success("Student created successfully!");
   };
 
-  const handleEditStudent = () => {
+  const handleEditStudent = async () => {
     if (!selectedStudent) return;
 
-    setStudents(students.map(s => 
-      s.id === selectedStudent.id 
-        ? { 
-            ...s, 
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            email: formData.email,
-            phone: formData.phone,
-            age: Number(formData.age) || s.age,
-            ageGroup: formData.ageGroup,
-            school: formData.school,
-            parentName: formData.parentName,
-            parentPhone: formData.parentPhone,
-            status: formData.status,
-          } 
-        : s
-    ));
+    try {
+      const response = await adminApi.updateStudent(selectedStudent.id, {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        age_group: formData.ageGroup,
+        parent_name: formData.parentName,
+        parent_phone: formData.parentPhone,
+        status: formData.status.toLowerCase()
+      });
 
-    setIsEditOpen(false);
-    setSelectedStudent(null);
-    resetForm();
-    toast.success("Student updated successfully");
+      if (response.success) {
+        toast.success("Student updated successfully");
+        fetchData();
+        setIsEditOpen(false);
+        setSelectedStudent(null);
+        resetForm();
+      }
+    } catch (error) {
+      toast.error(error.message || "Failed to update student");
+    }
   };
 
-  const handleDeleteStudent = () => {
+  const handleDeleteStudent = async () => {
     if (!selectedStudent) return;
-    setStudents(students.filter(s => s.id !== selectedStudent.id));
-    setIsDeleteOpen(false);
-    setSelectedStudent(null);
-    toast.success("Student deleted successfully");
+    try {
+      const response = await adminApi.deleteStudent(selectedStudent.id);
+      if (response.success) {
+        toast.success("Student deleted successfully");
+        fetchData();
+        setIsDeleteOpen(false);
+        setSelectedStudent(null);
+      }
+    } catch (error) {
+      toast.error(error.message || "Failed to delete student");
+    }
   };
 
   const openEditDialog = (student) => {
     setSelectedStudent(student);
     setFormData({
-      firstName: student.firstName,
-      lastName: student.lastName,
-      email: student.email,
-      phone: student.phone,
-      age: student.age.toString(),
-      ageGroup: student.ageGroup,
-      school: student.school,
-      parentName: student.parentName,
-      parentPhone: student.parentPhone,
-      status: student.status,
+      firstName: student.first_name || "",
+      lastName: student.last_name || "",
+      email: student.email || "",
+      phone: student.phone || "",
+      age: "",
+      ageGroup: student.age_group || "",
+      school: "", 
+      parentName: student.parent_name || "",
+      parentPhone: student.parent_phone || "",
+      status: student.status ? student.status.charAt(0).toUpperCase() + student.status.slice(1) : "Active",
     });
     setGeneratedCredentials({
       username: student.username,
-      password: student.password,
+      password: student.password || "••••••••••",
     });
     setIsEditOpen(true);
   };
@@ -295,37 +277,22 @@ export default function AdminStudents() {
     toast.success(`${label} copied!`);
   };
 
-  const exportStudents = () => {
-    const headers = ["Name","Email","Phone","Age","Age Group","School","Parent","Username","Password","Status"];
-    const rows = students.map(s => [
-      `${s.firstName} ${s.lastName}`,
-      s.email,
-      s.phone,
-      s.age,
-      s.ageGroup,
-      s.school,
-      s.parentName,
-      s.username,
-      s.password,
-      s.status,
-    ]);
-
-    const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "students_export.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Students exported!");
-  };
-
-  const stats = {
-    total: students.length,
-    active: students.filter(s => s.status === "Active").length,
-    pending: students.filter(s => s.status === "Pending").length,
-    inactive: students.filter(s => s.status === "Inactive").length,
+  const exportStudents = async () => {
+    try {
+      const response = await adminApi.exportStudents({
+        search: searchQuery,
+        ...(filterAgeGroup !== "all" && { age_group: filterAgeGroup })
+      });
+      const url = URL.createObjectURL(new Blob([response]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "students_export.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Students exported!");
+    } catch (error) {
+      toast.error("Failed to export students");
+    }
   };
 
   return (
@@ -623,7 +590,7 @@ export default function AdminStudents() {
       {/* Students Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Students ({filteredStudents.length})</CardTitle>
+          <CardTitle>Students ({pagination.total})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -640,110 +607,148 @@ export default function AdminStudents() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredStudents.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">
-                          {student.firstName} {student.lastName}
-                        </div>
-                        <div className="text-xs text-muted-foreground md:hidden">
-                          {student.email}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">{student.email}</TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <Badge variant="outline">{student.ageGroup}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <code className="text-xs bg-muted px-2 py-1 rounded">
-                          {student.username}
-                        </code>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => copyToClipboard(student.username, "Username")}
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <code className="text-xs bg-muted px-2 py-1 rounded font-mono">
-                          {showPasswords[student.id] ? student.password : "••••••••••"}
-                        </code>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => togglePasswordVisibility(student.id)}
-                        >
-                          {showPasswords[student.id] ? (
-                            <EyeOff className="h-3 w-3" />
-                          ) : (
-                            <Eye className="h-3 w-3" />
-                          )}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => copyToClipboard(student.password, "Password")}
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      <span
-                        className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          student.status === "Active"
-                            ? "bg-green-100 text-green-800"
-                            : student.status === "Pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {student.status}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => openEditDialog(student)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => openDeleteDialog(student)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                      Loading students...
                     </TableCell>
                   </TableRow>
-                ))}
-
-                {filteredStudents.length === 0 && (
+                ) : students.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
                       No students found
                     </TableCell>
                   </TableRow>
+                ) : (
+                  students.map((student) => (
+                    <TableRow key={student.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">
+                            {student.first_name} {student.last_name}
+                          </div>
+                          <div className="text-xs text-muted-foreground md:hidden">
+                            {student.email}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">{student.email}</TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <Badge variant="outline">{student.age_group}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <code className="text-xs bg-muted px-2 py-1 rounded">
+                            {student.username}
+                          </code>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => copyToClipboard(student.username, "Username")}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <code className="text-xs bg-muted px-2 py-1 rounded font-mono">
+                            {showPasswords[student.id] && student.password ? student.password : "••••••••••"}
+                          </code>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => togglePasswordVisibility(student.id)}
+                            disabled={!student.password}
+                          >
+                            {showPasswords[student.id] ? (
+                              <EyeOff className="h-3 w-3" />
+                            ) : (
+                              <Eye className="h-3 w-3" />
+                            )}
+                          </Button>
+                          {student.password && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() => copyToClipboard(student.password, "Password")}
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <span
+                          className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                            student.status === "active"
+                              ? "bg-green-100 text-green-800"
+                              : student.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {student.status}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => openEditDialog(student)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => openDeleteDialog(student)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 )}
               </TableBody>
             </Table>
           </div>
+          
+          {/* Pagination Controls */}
+          {pagination.lastPage > 1 && (
+            <div className="flex items-center justify-between space-x-2 py-4">
+              <div className="text-sm text-muted-foreground">
+                Page {pagination.page} of {pagination.lastPage}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                  disabled={pagination.page <= 1 || isLoading}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                  disabled={pagination.page >= pagination.lastPage || isLoading}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -888,7 +893,7 @@ export default function AdminStudents() {
             <DialogDescription>
               Are you sure you want to delete{" "}
               <strong>
-                {selectedStudent?.firstName} {selectedStudent?.lastName}
+                {selectedStudent?.first_name} {selectedStudent?.last_name}
               </strong>
               ? This action cannot be undone.
             </DialogDescription>
