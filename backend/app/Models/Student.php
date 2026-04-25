@@ -54,14 +54,20 @@ class Student extends Authenticatable
         'last_login_at' => 'datetime',
     ];
 
-    public function ageGroup()
-{
-    return $this->belongsTo(AgeGroup::class);
-}
-    public function getAgeGroupNameAttribute()
-{
-    return optional($this->ageGroup)->name;
-}
+    protected $appends = ['age_group', 'full_name', 'age'];
+
+    public function getAgeGroupAttribute()
+    {
+        if (!$this->date_of_birth) return null;
+        
+        $age = now()->diffInYears($this->date_of_birth);
+        if ($age >= 6 && $age <= 8) return "6-8";
+        if ($age >= 9 && $age <= 11) return "9-11";
+        if ($age >= 12 && $age <= 14) return "12-14";
+        if ($age >= 15 && $age <= 16) return "15-16";
+        if ($age < 6) return "<6";
+        return ">16";
+    }
 
 
     public function getFullNameAttribute()

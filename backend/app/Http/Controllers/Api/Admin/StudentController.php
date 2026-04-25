@@ -22,7 +22,7 @@ class StudentController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->input('per_page', 15);
-        $filters = $request->only(['search', 'status', 'account_type', 'country', 'date_from', 'date_to', 'sort_by', 'sort_direction']);
+        $filters = $request->only(['search', 'status', 'account_type', 'country', 'date_from', 'date_to', 'sort_by', 'sort_direction', 'age_group']);
 
         $students = $this->studentService->getAllStudents($filters, $perPage);
 

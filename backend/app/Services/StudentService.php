@@ -151,4 +151,113 @@ class StudentService
         
         return $username . rand(10, 99);
     }
+    public function getAllStudents(array $filters = [], $perPage = 15)
+    {
+        $query = Student::query();
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('username', 'like', "%{$search}%");
+            });
+        }
+
+        if (!empty($filters['age_group'])) {
+            $now = now();
+            switch ($filters['age_group']) {
+                case '6-8':
+                    $query->whereBetween('date_of_birth', [$now->copy()->subYears(9)->addDay(), $now->copy()->subYears(6)]);
+                    break;
+                case '9-11':
+                    $query->whereBetween('date_of_birth', [$now->copy()->subYears(12)->addDay(), $now->copy()->subYears(9)]);
+                    break;
+                case '12-14':
+                    $query->whereBetween('date_of_birth', [$now->copy()->subYears(15)->addDay(), $now->copy()->subYears(12)]);
+                    break;
+                case '15-16':
+                    $query->whereBetween('date_of_birth', [$now->copy()->subYears(17)->addDay(), $now->copy()->subYears(15)]);
+                    break;
+            }
+        }
+        
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        return $query->orderBy('created_at', 'desc')->paginate($perPage);
+    }
+
+    public function getStudentStatistics()
+    {
+        $total = Student::count();
+        $active = Student::where('status', 'active')->count();
+        $pending = Student::where('status', 'pending')->count();
+        $inactive = Student::where('status', 'inactive')->count();
+
+        return [
+            'total_students' => $total,
+            'status_breakdown' => [
+                'active' => $active,
+                'pending' => $pending,
+                'inactive' => $inactive
+            ]
+        ];
+    }
+
+    public function updateStudent(Student $student, array $data)
+    {
+        if (isset($data['password']) && !empty($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        } else {
+            unset($data['password']);
+        }
+        
+        $student->update($data);
+        return $student;
+    }
+
+    public function deleteStudent(Student $student)
+    {
+        return $student->delete();
+    }
+
+    public function exportStudents(array $filters = [])
+    {
+        $students = $this->getAllStudents($filters, 1000000)->items();
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=students_export.csv",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $columns = ['ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Username', 'Status', 'Age Group'];
+
+        $callback = function() use($students, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($students as $student) {
+                fputcsv($file, [
+                    $student->id, 
+                    $student->first_name, 
+                    $student->last_name, 
+                    $student->email, 
+                    $student->phone, 
+                    $student->username, 
+                    $student->status,
+                    $student->age_group
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return \Illuminate\Support\Facades\Response::stream($callback, 200, $headers);
+    }
 }
