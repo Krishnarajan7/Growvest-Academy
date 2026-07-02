@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
+import About from "./pages/About";
+import Store from "./pages/Store";
 import Courses from "./pages/Courses";
 import Team from "./pages/Team";
 import Blog from "./pages/Blog";
@@ -27,6 +29,7 @@ import AdminSettings from "./pages/admin/Settings";
 import AdminProfile from "./pages/admin/Profile";
 import AdminTestQuestions from "./pages/admin/TestQuestions";
 import AdminStudentAnalytics from "./pages/admin/StudentAnalytics";
+import AdminProducts from "./pages/admin/Products";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +42,8 @@ const App = () => (
         <Routes>
           {/* Public Routes */}
           <Route element={<Layout><Home /></Layout>} path="/" />
+          <Route element={<Layout><About /></Layout>} path="/about" />
+          <Route element={<Layout><Store /></Layout>} path="/store" />
           <Route element={<Layout><Courses /></Layout>} path="/courses" />
           <Route element={<Layout><Team /></Layout>} path="/team" />
           <Route element={<Layout><Blog /></Layout>} path="/blog" />
@@ -59,6 +64,7 @@ const App = () => (
             <Route path="revenue" element={<AdminRevenue />} />
             <Route path="media" element={<AdminMedia />} />
             <Route path="questions" element={<AdminTestQuestions />} />
+            <Route path="products" element={<AdminProducts />} />
             <Route path="notifications" element={<AdminNotifications />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="profile" element={<AdminProfile />} />

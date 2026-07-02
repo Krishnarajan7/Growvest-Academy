@@ -1,331 +1,277 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, User, BookOpen, Home, Phone, Mail, MapPin } from 'lucide-react';
+import React, { useRef, useState } from "react";
+import { Mail, Phone, MapPin, Clock, MessageCircle, Check } from "lucide-react";
+import { Sun, Sparkle, StarDoodle, PaperPlane } from "@/components/KidDoodles";
+import { useGsapReveal } from "@/hooks/useGsapReveal";
+
+const WHATSAPP_NUMBER = "917418991909";
+const PHONE = "+91 74189 91909";
+const EMAIL = "Growvestacademy@gmail.com";
+
+const CLASSES = [
+  "LKG", "UKG", "1st", "2nd", "3rd", "4th", "5th",
+  "6th", "7th", "8th", "9th", "10th",
+];
+
+const faqs = [
+  {
+    q: "What ages do you teach?",
+    a: "Children from ages 4 to 15 — from LKG all the way up to 10th standard.",
+  },
+  {
+    q: "How do the classes work?",
+    a: "Monday to Friday are live, interactive online classes. Saturday and Sunday are offline fun-learning activities and competitions.",
+  },
+  {
+    q: "How long is the Super Kids program?",
+    a: "It's a 3-month foundation course in three levels — Foundation, Intermediate and Advanced.",
+  },
+  {
+    q: "How do I enroll my child?",
+    a: "Message us on WhatsApp or fill in the form and we'll call you back with the next steps.",
+  },
+  {
+    q: "Do you sell school supplies too?",
+    a: "Yes — our School Kit store has complete kits from ₹199. Just open the Store page to order.",
+  },
+];
 
 const Contact = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    category: '',
-    message: ''
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    childClass: "",
+    message: "",
   });
+  const [sent, setSent] = useState(false);
+  const rootRef = useRef(null);
+  useGsapReveal(rootRef);
 
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSelectChange = (value, field) => {
-    setFormData({
-      ...formData,
-      [field]: value
-    });
-  };
+  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Contact form submitted:', formData);
-    alert('Thank you for your message! We\'ll get back to you soon.');
-    setFormData({
-      name: '',
-      email: '',
-      subject: '',
-      category: '',
-      message: ''
-    });
+    setSent(true);
   };
 
-  const contactMethods = [
-    {
-      icon: User,
-      title: 'General Support',
-      description: 'Get help with your account, courses, or general questions',
-      contact: 'growwithrs25@gmail.com',
-      responseTime: 'Usually responds in 2-4 hours'
-    },
-    {
-      icon: BookOpen,
-      title: 'Course Support',
-      description: 'Need help with course content or technical issues',
-      contact: 'growwithrs25@gmail.com',
-      responseTime: 'Usually responds in 1-2 hours'
-    },
-    {
-      icon: Calendar,
-      title: 'Partnership & Media',
-      description: 'Business partnerships, media inquiries, and collaboration',
-      contact: 'Growwithrs25@gmail.com',
-      responseTime: 'Usually responds in 24-48 hours'
-    },
-  ];
-
-  const faqs = [
-    {
-      question: 'How do I reset my password?',
-      answer: 'You can reset your password by clicking on "Forgot Password" on the login page and following the instructions sent to your email.'
-    },
-    {
-      question: 'Can I download course materials?',
-      answer: 'Yes, premium members can download course materials including PDFs, worksheets, and presentations for offline study.'
-    },
-    {
-      question: 'How do I upgrade to premium?',
-      answer: 'You can upgrade to premium by visiting the Premium Plans page and selecting your preferred plan. The upgrade is instant after payment.'
-    },
-    {
-      question: 'Do you offer refunds?',
-      answer: 'Yes, we offer a 7-day money-back guarantee for premium subscriptions. Contact our support team for refund requests.'
-    }
-  ];
+  const waHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+    "Hello Growvest Academy! I'd like to know more about enrolling my child."
+  )}`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-white">
-      <div className="section-padding py-8">
-        <div className="container-width max-w-7xl mx-auto px-4">
-          {/* Header */}
-          <div className="text-center mb-8 scroll-reveal">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-              Get in Touch
+    <div className="gv" ref={rootRef}>
+      {/* ============================================================ HERO */}
+      <section className="relative overflow-hidden border-b-2 border-[color:var(--ink)]">
+        <Sun className="gv-float pointer-events-none absolute right-10 top-28 hidden h-12 w-12 text-[color:var(--grass)] lg:block" />
+        <StarDoodle className="gv-float pointer-events-none absolute left-3 top-1/2 hidden h-6 w-6 text-[color:var(--grass)] lg:block" />
+
+        <div className="mx-auto gv-reveal max-w-8xl px-5 pt-28 pb-14 sm:pt-32 gv-margin">
+          <div className="pl-6 sm:pl-20">
+            <p className="gv-eyebrow flex items-center gap-2">
+              Get in touch
+              <Sparkle className="h-3.5 w-3.5 text-[color:var(--grass)]" />
+            </p>
+            <h1 className="gv-display mt-4 text-4xl font-extrabold leading-[0.98] tracking-tight sm:text-6xl">
+              Let's talk about your{" "}
+              <span className="gv-circle">child</span>.
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Have questions about our courses, need technical support, or want to explore partnerships? 
-              We're here to help you succeed in your investment journey.
+            <p className="mt-5 max-w-xl text-lg gv-t80">
+              Questions about classes, timings or enrollment? Send us a note and
+              we'll get back to you — or message us straight on WhatsApp.
             </p>
           </div>
+        </div>
+      </section>
 
-          {/* Main Content Grid */}
-          <div className="grid lg:grid-cols-3 gap-6 mb-8">
-            {/* Contact Form - Takes 2 columns */}
-            <div className="lg:col-span-2 scroll-reveal">
-              <Card className="shadow-lg hover-lift h-full">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-xl">Send us a Message</CardTitle>
-                  <p className="text-gray-600 text-sm">
-                    Fill out the form below and we'll get back to you as soon as possible.
+      {/* ============================================================ BODY */}
+      <section className="border-b-2 border-[color:var(--ink)]">
+        <div className="mx-auto gv-reveal max-w-8xl px-5 py-14">
+          <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
+            {/* form */}
+            <div className="gv-box gv-pop">
+              <div className="border-b-2 border-dashed border-[color:var(--ink)] px-6 py-4">
+                <h2 className="gv-display text-xl font-bold">Send us a message</h2>
+                <p className="text-sm gv-t70">
+                  Fill this in and we'll call you back.
+                </p>
+              </div>
+
+              {sent ? (
+                <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
+                  <span className="grid h-14 w-14 place-items-center rounded-full border-[1.5px] border-[color:var(--ink)] bg-[color:var(--grass)] text-white">
+                    <Check className="h-7 w-7" strokeWidth={3} />
+                  </span>
+                  <h3 className="gv-display text-2xl font-bold">Thank you!</h3>
+                  <p className="max-w-sm gv-t70">
+                    We've got your message and will reach out shortly. For
+                    anything urgent, message us on WhatsApp.
                   </p>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid md:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label htmlFor="name" className="text-sm">Full Name *</Label>
-                        <Input
-                          id="name"
-                          name="name"
-                          type="text"
-                          value={formData.name}
-                          onChange={handleInputChange}
-                          placeholder="Enter your full name"
-                          required
-                          className="h-9"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="email" className="text-sm">Email Address *</Label>
-                        <Input
-                          id="email"
-                          name="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          placeholder="Enter your email"
-                          required
-                          className="h-9"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label htmlFor="category" className="text-sm">Category</Label>
-                      <Select value={formData.category} onValueChange={(value) => handleSelectChange(value, 'category')}>
-                        <SelectTrigger className="h-9">
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="general">General Support</SelectItem>
-                          <SelectItem value="course">Course Support</SelectItem>
-                          <SelectItem value="technical">Technical Issue</SelectItem>
-                          <SelectItem value="billing">Billing & Payment</SelectItem>
-                          <SelectItem value="partnership">Partnership</SelectItem>
-                          <SelectItem value="feedback">Feedback</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label htmlFor="subject" className="text-sm">Subject *</Label>
-                      <Input
-                        id="subject"
-                        name="subject"
-                        type="text"
-                        value={formData.subject}
-                        onChange={handleInputChange}
-                        placeholder="Brief description of your inquiry"
+                  <p className="gv-hand text-2xl text-[color:var(--red)]">
+                    talk soon! 👋
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4 p-6">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Parent's name" required>
+                      <input
                         required
-                        className="h-9"
+                        value={form.name}
+                        onChange={set("name")}
+                        placeholder="Your name"
+                        className="gv-input"
                       />
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label htmlFor="message" className="text-sm">Message *</Label>
-                      <Textarea
-                        id="message"
-                        name="message"
-                        value={formData.message}
-                        onChange={handleInputChange}
-                        placeholder="Provide detailed information about your inquiry..."
-                        rows={4}
+                    </Field>
+                    <Field label="Phone" required>
+                      <input
                         required
-                        className="resize-none"
+                        type="tel"
+                        value={form.phone}
+                        onChange={set("phone")}
+                        placeholder="Your phone number"
+                        className="gv-input"
                       />
-                    </div>
-
-                    <Button type="submit" className="w-full btn-primary">
-                      Send Message
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Contact Info Sidebar - Takes 1 column */}
-            <div className="space-y-4 scroll-reveal">
-              {/* Quick Contact */}
-              <Card className="bg-gradient-to-r from-green-600 to-green-400 text-white">
-                <CardContent className="p-4">
-                  <h3 className="text-lg font-bold mb-3">Contact Information</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center">
-                      <Mail className="mr-2 flex-shrink-0" size={16} />
-                      <div>
-                        <p className="text-sm font-medium">Email</p>
-                        <a href="mailto:Growwithrs25@gmail.com" className="text-green-100 hover:text-white text-sm">
-                          Growvestacademy@gmail.com
-                        </a>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-  <Phone className="mr-2 flex-shrink-0" size={16} />
-  <div>
-    <p className="text-sm font-medium">Call</p>
-    <a
-      href="tel:+917418991909"
-      className="text-green-100 hover:text-white text-sm"
-    >
-      +91 74189 91909
-    </a>
-  </div>
-</div>
-
-                    <div className="flex items-center">
-                      <MapPin className="mr-2 flex-shrink-0" size={16} />
-                      <div>
-                        <p className="text-sm font-medium">Location</p>
-                        <p className="text-green-100 text-sm">177/1 rahamaniya street Lalpet</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-                      <Home className="mr-2 flex-shrink-0" size={16} />
-                      <div>
-                        <p className="text-sm font-medium">Office Hours</p>
-                        <p className="text-green-100 text-sm">Mon - Fri, 9:00 AM - 6:00 PM IST</p>
-                      </div>
-                    </div>
+                    </Field>
                   </div>
-                </CardContent>
-              </Card>
 
-              {/* Support Methods */}
-              <div className="space-y-3">
-                {contactMethods.map((method, index) => {
-                  const Icon = method.icon;
-                  return (
-                    <Card key={index} className="hover-lift">
-                      <CardContent className="p-3">
-                        <div className="flex items-start space-x-3">
-                          <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-green-400 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Icon className="text-white" size={16} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-gray-900 text-sm mb-1">{method.title}</h4>
-                            <p className="text-gray-600 text-xs mb-1">{method.description}</p>
-                            <p className="text-xs text-gray-500">{method.responseTime}</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Email">
+                      <input
+                        type="email"
+                        value={form.email}
+                        onChange={set("email")}
+                        placeholder="Optional"
+                        className="gv-input"
+                      />
+                    </Field>
+                    <Field label="Child's class">
+                      <select
+                        value={form.childClass}
+                        onChange={set("childClass")}
+                        className="gv-input"
+                      >
+                        <option value="">Select class</option>
+                        {CLASSES.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  </div>
 
-          {/* FAQ Section */}
-          <div className="grid md:grid-cols-2 gap-4 mb-8">
-            <div className="scroll-reveal">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
-              <div className="space-y-3">
-                {faqs.slice(0, 2).map((faq, index) => (
-                  <Card key={index} className="hover-lift">
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-2 text-sm">{faq.question}</h3>
-                      <p className="text-gray-600 text-sm">{faq.answer}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-            <div className="scroll-reveal">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">&nbsp;</h2>
-              <div className="space-y-3">
-                {faqs.slice(2, 4).map((faq, index) => (
-                  <Card key={index + 2} className="hover-lift">
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-2 text-sm">{faq.question}</h3>
-                      <p className="text-gray-600 text-sm">{faq.answer}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </div>
+                  <Field label="Message" required>
+                    <textarea
+                      required
+                      rows={4}
+                      value={form.message}
+                      onChange={set("message")}
+                      placeholder="Tell us what you'd like to know…"
+                      className="gv-input resize-none"
+                    />
+                  </Field>
 
-          {/* Bottom CTA */}
-          <div className="text-center scroll-reveal">
-            <div className="bg-gray-50 rounded-xl p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-3">
-                Still Have Questions?
-              </h2>
-              <p className="text-gray-600 mb-4 max-w-2xl mx-auto text-sm">
-                Can't find what you're looking for? Our support team is always ready to help. 
-                We typically respond within a few hours during business hours.
+                  <button type="submit" className="gv-btn gv-btn-go gv-pop gv-press w-full">
+                    <PaperPlane className="h-5 w-5" /> Send message
+                  </button>
+                </form>
+              )}
+            </div>
+
+            {/* contact info */}
+            <div className="flex flex-col gap-5">
+              <div
+                className="gv-box gv-pop p-6"
+                style={{ background: "var(--board)", color: "var(--chalk)", borderColor: "var(--board)" }}
+              >
+                <h3 className="gv-display text-lg font-bold">Reach us directly</h3>
+                <ul className="mt-4 space-y-4 text-sm">
+                  <InfoRow icon={Phone} label="Call">
+                    <a href={`tel:${WHATSAPP_NUMBER}`} className="hover:underline">
+                      {PHONE}
+                    </a>
+                  </InfoRow>
+                  <InfoRow icon={Mail} label="Email">
+                    <a href={`mailto:${EMAIL}`} className="break-all hover:underline">
+                      {EMAIL}
+                    </a>
+                  </InfoRow>
+                  <InfoRow icon={MapPin} label="Visit">
+                    177/1 Rahamaniya Street, Lalpet
+                  </InfoRow>
+                  <InfoRow icon={Clock} label="Hours">
+                    Mon – Fri, 9:00 AM – 6:00 PM
+                  </InfoRow>
+                </ul>
+              </div>
+
+              <a
+                href={waHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="gv-btn gv-btn-go gv-pop gv-press"
+              >
+                <MessageCircle className="h-5 w-5" /> Chat on WhatsApp
+              </a>
+              <p className="gv-hand text-center text-xl text-[color:var(--red)]">
+                fastest way to reach us ↗
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <a href="mailto:Growwithrs25@gmail.com">
-                  <Button size="lg" className="btn-primary">
-                    Email Support
-                  </Button>
-                </a>
-                <a href="/premium">
-                  <Button size="lg" variant="outline">
-                    View Premium Support
-                  </Button>
-                </a>
-              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* ============================================================= FAQ */}
+      <section>
+        <div className="gv-reveal mx-auto max-w-4xl px-5 py-14">
+          <div className="flex flex-wrap items-end gap-x-4 gap-y-1">
+            <span className="gv-display text-lg font-bold text-[color:var(--red)]">?</span>
+            <h2 className="gv-display text-3xl font-bold leading-none sm:text-4xl">
+              Common questions
+            </h2>
+            <span className="gv-hand text-2xl gv-t50">quick answers for parents</span>
+          </div>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            {faqs.map((f) => (
+              <div key={f.q} className="gv-box p-5">
+                <h3 className="gv-display font-bold">{f.q}</h3>
+                <p className="mt-2 text-sm gv-t70">{f.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
+
+function Field({ label, required, children }) {
+  return (
+    <label className="block space-y-1.5">
+      <span className="text-sm font-semibold">
+        {label} {required && <span className="text-[color:var(--red)]">*</span>}
+      </span>
+      {children}
+    </label>
+  );
+}
+
+function InfoRow({ icon, label, children }) {
+  const Icon = icon;
+  return (
+    <li className="flex items-start gap-3">
+      <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-md border border-[color:rgba(240,253,244,0.35)]">
+        <Icon className="h-4 w-4" />
+      </span>
+      <span>
+        <span className="block text-xs uppercase tracking-wide opacity-70">
+          {label}
+        </span>
+        {children}
+      </span>
+    </li>
+  );
+}
 
 export default Contact;

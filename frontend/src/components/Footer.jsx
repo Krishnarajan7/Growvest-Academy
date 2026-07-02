@@ -5,7 +5,7 @@ import { Instagram, MessageCircle } from 'lucide-react';
 const Footer = () => {
   return (
     <footer className="bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid md:grid-cols-4 gap-8">
           {/* Logo and Description */}
           <div className="md:col-span-2">
@@ -18,8 +18,9 @@ const Footer = () => {
               <span className="text-xl font-bold">Growvest Academy</span>
             </div>
             <p className="text-gray-400 mb-4 max-w-md">
-              Empowering beginners to make smart investment decisions through comprehensive 
-              mutual fund education and personal finance guidance. Start your wealth-building journey today.
+              Helping children speak, read and grow with confidence — Spoken English,
+              phonics, public speaking and fun learning activities for ages 4–15.
+              200+ students and counting.
             </p>
             <div className="flex space-x-4">
               <a
@@ -48,10 +49,10 @@ const Footer = () => {
           <div>
             <h3 className="font-semibold mb-4">Learning</h3>
             <ul className="space-y-2">
-              <li><Link to="/courses" className="text-gray-400 hover:text-green-400">Financial Development</Link></li>
-              <li><Link to="/courses" className="text-gray-400 hover:text-green-400">Stock Market</Link></li>
-              <li><Link to="/blog" className="text-gray-400 hover:text-green-400">Java with Project</Link></li>
-              <li><Link to="/premium" className="text-gray-400 hover:text-green-400">Web Development with Project</Link></li>
+              <li><Link to="/super-kids" className="text-gray-400 hover:text-green-400">Super Kids Program</Link></li>
+              <li><Link to="/activities" className="text-gray-400 hover:text-green-400">Fun Learning Activities</Link></li>
+              <li><Link to="/store" className="text-gray-400 hover:text-green-400">School Kit Store</Link></li>
+              <li><Link to="/about" className="text-gray-400 hover:text-green-400">About Growvest</Link></li>
               <li><Link to="/courses" className="text-gray-400 hover:text-green-400">More Courses..</Link></li>
             </ul>
           </div>
@@ -71,11 +72,11 @@ const Footer = () => {
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center space-y-3">
   <p className="text-gray-400">
-    © {new Date().getFullYear()} Growvest Academy. All rights reserved. Empowering financial growth through education.
+    © {new Date().getFullYear()} Growvest Academy. All rights reserved. Helping children speak, read and grow.
   </p>
 
   <p className="text-gray-500 text-sm">
-    Investment education • Mutual Fund Guidance • Personal Finance Growth
+    Spoken English • Public Speaking • Fun Learning for Kids
   </p>
 
   {/* Powered By */}

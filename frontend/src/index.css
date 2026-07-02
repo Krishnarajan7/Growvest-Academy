@@ -1,5 +1,6 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -238,4 +239,126 @@ body {
 
 .animate-slide-right {
   animation: slideInRight 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* =========================================================================
+   "Exercise Book" theme — scoped to the kids landing (/) and Store (/store).
+   Warm ruled paper, red margin, teacher's-pen handwriting, flat ink borders,
+   hard printed shadows. No gradients, no soft glows.
+   ========================================================================= */
+.gv {
+  /* Site theme: white + brand green + neutral gray (matches the rest of the app) */
+  --ink: #111827;      /* gray-900 — headings, borders */
+  --paper: #ffffff;    /* white page background        */
+  --red: #15803d;      /* accent / handwriting (green-700) */
+  --rule: #e5e7eb;     /* gray-200 faint ruled line    */
+  --board: #14532d;    /* dark green board (green-900) */
+  --chalk: #f0fdf4;    /* green-50 "chalk"             */
+  --star: #16a34a;     /* achievement badge (green-600) */
+  --grass: #16a34a;    /* brand green / GO (green-600) */
+  --plum: #14532d;     /* level-3 accent (green-900)   */
+
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--ink);
+  background-color: var(--paper);
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+
+.gv-display { font-family: 'Inter', system-ui, sans-serif; }
+.gv-hand    { font-family: 'Caveat', cursive; }
+
+/* eyebrow / label */
+.gv-eyebrow {
+  font-family: 'Inter', system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: var(--red);
+}
+
+/* flat drawn box */
+.gv-box {
+  background: #fff;
+  border: 1.5px solid var(--ink);
+}
+
+/* hard printed / sticker shadow */
+.gv-pop     { box-shadow: 5px 5px 0 var(--ink); }
+.gv-pop-red { box-shadow: 5px 5px 0 var(--red); }
+
+/* tactile press */
+.gv-press {
+  transition: transform 0.09s ease, box-shadow 0.09s ease;
+}
+.gv-press:hover  { transform: translate(2px, 2px); box-shadow: 3px 3px 0 var(--ink); }
+.gv-press:active { transform: translate(5px, 5px); box-shadow: 0 0 0 var(--ink); }
+
+/* red notebook margin down the left of a page column */
+.gv-margin { position: relative; }
+.gv-margin::before {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0; left: 1.25rem;
+  width: 1.5px;
+  background: var(--red);
+  opacity: 0.55;
+}
+@media (min-width: 640px) {
+  .gv-margin::before { left: 2.25rem; }
+}
+
+/* buttons */
+.gv-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  font-family: 'Inter', system-ui, sans-serif; font-weight: 700;
+  padding: 0.85rem 1.5rem; border: 1.5px solid var(--ink);
+  background: var(--ink); color: #fff; cursor: pointer;
+}
+.gv-btn-ghost { background: #fff; color: var(--ink); }
+.gv-btn-go    { background: var(--grass); border-color: var(--grass); color: #fff; }
+
+/* form inputs */
+.gv-input {
+  width: 100%;
+  border: 1.5px solid var(--ink);
+  background: #fff;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.95rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--ink);
+  outline: none;
+  transition: box-shadow 0.1s ease;
+}
+.gv-input:focus { box-shadow: 3px 3px 0 var(--grass); }
+.gv-input::placeholder { color: rgba(17, 24, 39, 0.4); }
+
+/* teacher's red circle around a word */
+.gv-circle {
+  position: relative; white-space: nowrap;
+  color: var(--red);
+}
+.gv-circle::after {
+  content: "";
+  position: absolute; inset: -14% -8% -18% -8%;
+  border: 2.5px solid var(--red);
+  border-radius: 48% 52% 50% 50% / 60% 55% 45% 40%;
+  transform: rotate(-2deg);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* muted gray tones (Tailwind can't alpha a bare var(), so bake them here) */
+.gv-t80 { color: rgba(17, 24, 39, 0.78); }  /* ~gray-700 */
+.gv-t70 { color: rgba(17, 24, 39, 0.64); }  /* ~gray-600 */
+.gv-t50 { color: rgba(17, 24, 39, 0.48); }  /* ~gray-500 */
+
+/* on the dark green board */
+.gv-board-muted { color: rgba(240, 253, 244, 0.72); }
+.gv-board-rule  { border-color: rgba(240, 253, 244, 0.24); }
+
+@media (prefers-reduced-motion: reduce) {
+  .gv-press { transition: none; }
+  .gv-press:hover, .gv-press:active { transform: none; }
 }

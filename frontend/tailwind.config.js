@@ -91,6 +91,9 @@ module.exports = {
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
       },
+      maxWidth: {
+        "8xl": "88rem",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

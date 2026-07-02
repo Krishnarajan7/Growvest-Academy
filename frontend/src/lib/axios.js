@@ -86,6 +86,39 @@ api.interceptors.response.use(
 export const publicApi = {
   getPublicMedia: (params) => api.get('/public/media', { params }),
   getPublicMediaItem: (id) => api.get(`/public/media/${id}`),
+
+  // School Kit Store (public)
+  getProducts: () => api.get('/public/products'),
+  getProduct: (slug) => api.get(`/public/products/${slug}`),
+};
+
+// Build multipart FormData for product create/update (supports image upload)
+const buildProductFormData = (data = {}) => {
+  const formData = new FormData();
+
+  Object.entries(data).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+
+    if (key === 'features' && Array.isArray(value)) {
+      value.forEach((f) => formData.append('features[]', f));
+      return;
+    }
+
+    if (key === 'image') {
+      // Only append when an actual File was selected
+      if (value instanceof File) formData.append('image', value);
+      return;
+    }
+
+    if (typeof value === 'boolean') {
+      formData.append(key, value ? '1' : '0');
+      return;
+    }
+
+    formData.append(key, value);
+  });
+
+  return formData;
 };
 
 // Admin API methods
@@ -219,6 +252,15 @@ export const adminApi = {
   getStudentAgeGroups: () => api.get('/admin/analytics/students/age-groups'),
   getStudentMonthlyTrends: () => api.get('/admin/analytics/students/monthly-trends'),
   getTopPerformers: () => api.get('/admin/analytics/students/top-performers'),
+
+  // School Kit Store Products (admin CRUD)
+  getProducts: () => api.get('/admin/products'),
+  getProduct: (id) => api.get(`/admin/products/${id}`),
+  createProduct: (data) => api.post('/admin/products', buildProductFormData(data)),
+  // POST + FormData (PHP can't parse multipart on PUT) → handled by POST /{id} route
+  updateProduct: (id, data) => api.post(`/admin/products/${id}`, buildProductFormData(data)),
+  deleteProduct: (id) => api.delete(`/admin/products/${id}`),
+  toggleProductStatus: (id) => api.post(`/admin/products/${id}/toggle-status`),
 };
 
 // Student API methods

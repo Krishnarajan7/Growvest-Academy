@@ -13,6 +13,7 @@ import {
   UserCircle,
   Image,
   FileQuestion,
+  ShoppingBag,
   Menu,
   X,
 } from "lucide-react";
@@ -73,6 +74,7 @@ const menuItems = [
   { title: "Student Analytics", url: "/admin/analytics", icon: GraduationCap },
   { title: "Revenue", url: "/admin/revenue", icon: DollarSign },
   { title: "Media", url: "/admin/media", icon: Image },
+  { title: "School Kit Store", url: "/admin/products", icon: ShoppingBag },
   { title: "Test Questions", url: "/admin/questions", icon: FileQuestion },
   { title: "Notifications", url: "/admin/notifications", icon: Bell },
 ];

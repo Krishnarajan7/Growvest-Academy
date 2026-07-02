@@ -23,11 +23,11 @@ const Navbar = () => {
 
   const navigation = [
     { name: "Home", href: "/" },
+    { name: "Store", href: "/store" },
+    { name: "Super Kids", href: "/super-kids" },
+    { name: "Activities", href: "/activities" },
     { name: "Courses", href: "/courses" },
-    { name: 'Super Kids', href: '/super-kids' },
-    { name: 'Activities', href: '/activities' },
-    { name: 'Team', href: '/team' },
-    { name: "Blog", href: "/blog" },
+    { name: "About Growvest", href: "/about" },
     { name: "Contact", href: "/contact" },
   ];
 

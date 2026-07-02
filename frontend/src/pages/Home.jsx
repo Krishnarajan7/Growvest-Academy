@@ -1,421 +1,488 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Link } from "react-router-dom";
-import {
-  TrendingUp,
-  BookOpen,
-  Users,
-  Shield,
-  Star,
-  Calculator,
-  Trophy,
-  Award,
-  CheckCircle,
-  Download,
-  Share2,
-  Code,
-  BarChart3,
-  PiggyBank,
-  LineChart,
-  Rocket,
-  Clock,
-  Globe,
-  Target,
-  ArrowRight,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import StockMarketTicker from "@/components/StockMarketTicker";
-import HeroCarousel from "@/components/HeroCarousel";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import RegistrationForm from "@/components/RegistrationForm";
+import { Check, ArrowRight, Star } from "lucide-react";
+import { useGsapReveal } from "@/hooks/useGsapReveal";
+
+/* ---------- content ---------------------------------------------------- */
+
+const reportCard = [
+  ["Spoken English", "Fluent"],
+  ["Reading & Writing", "Strong"],
+  ["Public Speaking", "Stage-ready"],
+  ["General Knowledge", "Curious"],
+  ["General Maths", "Confident"],
+];
+
+const timetable = [
+  {
+    days: "Mon – Fri",
+    kind: "Online, live",
+    what: "Interactive Classes",
+    detail: "Live English, phonics and maths sessions from home.",
+  },
+  {
+    days: "Sat & Sun",
+    kind: "Offline, in person",
+    what: "Fun Learning Activities",
+    detail: "Games, reading circles and competitions that build real skills.",
+  },
+];
+
+const syllabus = [
+  {
+    n: "1",
+    title: "Foundation",
+    accent: "var(--grass)",
+    items: [
+      "Basic Spoken English",
+      "Phonics",
+      "Self Introduction",
+      "Reading Basics",
+      "Good Habits",
+      "Basic Maths",
+    ],
+  },
+  {
+    n: "2",
+    title: "Intermediate",
+    accent: "var(--ink)",
+    items: [
+      "Daily English Conversation",
+      "Public Speaking",
+      "Reading & Writing Skills",
+      "General Knowledge",
+      "Confidence Building",
+      "Mental Maths",
+    ],
+  },
+  {
+    n: "3",
+    title: "Advanced",
+    accent: "var(--plum)",
+    items: [
+      "Fluent Communication",
+      "Stage & Public Speaking",
+      "Creative Writing",
+      "Logical Thinking",
+      "Goal Setting",
+      "Future-Ready Skills",
+    ],
+  },
+];
+
+const afterThreeMonths = [
+  "Speak English more easily",
+  "Improve confidence & communication",
+  "Become active, curious learners",
+  "Do better at school",
+  "Build strong skills for the future",
+];
+
+const competitions = [
+  "Spell Bee",
+  "Drawing",
+  "General Knowledge Quiz",
+  "Public Speaking",
+  "Reading Activities",
+  "Fun Learning Games",
+];
+
+/* ---------- page ------------------------------------------------------- */
 
 const Home = () => {
-  const features = [
-    {
-      title: "Expert Guidance",
-      description:
-        "Learn from seasoned developers and tech industry experts. Get insights into modern programming practices and career guidance.",
-      icon: TrendingUp,
-    },
-    {
-      title: "Comprehensive Courses",
-      description:
-        "Access a wide range of courses covering Web Development, Java, AI, and more. Perfect for beginners and advanced learners.",
-      icon: BookOpen,
-    },
-    {
-      title: "Community Support",
-      description:
-        "Join a vibrant community of developers and learners. Share projects, ask questions, and grow together.",
-      icon: Users,
-    },
-    {
-      title: "Secure Platform",
-      description:
-        "Learn with confidence on our secure and reliable platform. Your progress and projects are protected.",
-      icon: Shield,
-    },
-    {
-      title: "Personalized Learning",
-      description:
-        "Customize your learning path to match your career goals. Track your progress and get personalized recommendations.",
-      icon: Star,
-    },
-    {
-      title: "Hands-on Projects",
-      description:
-        "Build real-world projects and portfolios. Apply your skills with practical assignments and industry-relevant challenges.",
-      icon: Calculator,
-    },
-  ];
-
-  const testimonials = [
-    {
-      name: "Priya Sharma",
-      title: "Software Engineer",
-      quote:
-        "Growvest Academy helped me transition into tech with their comprehensive Full Stack course. The projects were amazing!",
-    },
-    {
-      name: "Amit Patel",
-      title: "Java Developer",
-      quote:
-        "I was new to programming, but Growvest Academy made Java simple and accessible. Now I'm working at a top tech company.",
-    },
-  ];
-
-  const stats = [
-    { label: "Technical Courses", value: "10+" },
-    { label: "Happy Learners", value: "10K+" },
-    { label: "Years of Experience", value: "5+" },
-  ];
-
-  const certificateFeatures = [
-    { icon: CheckCircle, text: "Official Growvest Academy Certificate" },
-    { icon: Download, text: "Downloadable PDF format" },
-    { icon: Share2, text: "LinkedIn profile ready" },
-  ];
+  const rootRef = useRef(null);
+  useGsapReveal(rootRef);
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Carousel Section */}
-      <HeroCarousel />
-      {/* Stock Market Ticker */}
-      <StockMarketTicker />
+    <div className="gv" ref={rootRef}>
+      {/* ============================================================ HERO */}
+      <section className="relative overflow-hidden border-b-2 border-[color:var(--ink)]">
+        {/* kid doodles in the margins */}
+        <Sun className="gv-float pointer-events-none absolute right-10 top-28 hidden h-14 w-14 text-[color:var(--grass)] lg:block" />
+        <StarDoodle className="gv-float pointer-events-none absolute right-1/3 top-24 hidden h-6 w-6 rotate-12 text-[color:var(--grass)] lg:block" />
+        <Smiley className="gv-float pointer-events-none absolute left-3 top-1/2 hidden h-7 w-7 text-[color:var(--grass)] lg:block" />
+        <StarDoodle className="gv-float pointer-events-none absolute bottom-16 left-2 hidden h-5 w-5 -rotate-12 text-[color:var(--grass)] lg:block" />
 
-      {/* Stats Section */}
-      <section className="py-12 bg-white scroll-reveal">
-        <div className="container-width section-padding">
-          <div className="grid md:grid-cols-3 gap-8 text-center stagger-children">
-            {stats.map((stat, index) => (
-              <div key={index} className="hover-lift">
-                <h3 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-green-600 bg-clip-text text-transparent">
-                  {stat.value}
-                </h3>
-                <p className="text-gray-600">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        <div className="mx-auto gv-reveal max-w-8xl px-5 pt-28 pb-16 sm:pt-32 gv-margin">
+          <div className="pl-6 sm:pl-20">
+            <p className="gv-eyebrow flex items-center gap-2">
+              Growvest Academy · Spoken English for kids
+              <Sparkle className="h-3.5 w-3.5 text-[color:var(--grass)]" />
+            </p>
 
-      {/* Certification Section */}
-      <section className="py-16 bg-gradient-to-br from-green-600 to-green-700 text-white relative overflow-hidden scroll-reveal">
-        <div className="absolute inset-0 hero-parallax">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-green-500 rounded-full opacity-20 -translate-y-32 translate-x-32"></div>
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-green-800 rounded-full opacity-20 translate-y-32 -translate-x-32"></div>
-        </div>
-        <div className="container-width section-padding relative">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8 scroll-reveal-left">
-              <div className="space-y-6">
-                <div className="inline-flex items-center space-x-3 bg-green-500/20 px-4 py-2 rounded-full">
-                  <Award className="w-6 h-6 text-yellow-300" />
-                  <span className="font-medium text-green-100">
-                    Industry-Recognized Certification
-                  </span>
+            <div className="mt-6 grid gap-10 lg:grid-cols-[1.15fr_1fr] lg:items-start">
+              {/* headline */}
+              <div>
+                <h1 className="gv-display text-4xl sm:text-6xl font-extrabold leading-[0.98] tracking-tight">
+                  Where children learn to
+                  speak, read, and{" "}
+                  <span className="gv-circle">shine</span>.
+                </h1>
+                <p className="mt-6 max-w-md text-lg gv-t80">
+                  A friendly 3-month foundation program for ages 4–15 — English,
+                  phonics, public speaking and the confidence to use them.
+                </p>
+
+                <div className="mt-8 flex flex-wrap items-center gap-4">
+                  <Link to="/contact" className="gv-btn gv-pop gv-press">
+                    Enroll your child
+                  </Link>
+                  <Link to="/store" className="gv-btn gv-btn-ghost gv-pop gv-press">
+                    See the school kits
+                  </Link>
                 </div>
-                <h2 className="text-3xl lg:text-4xl font-bold leading-tight">
-                  Earn Certificates That Boost Your Career
-                </h2>
-                <p className="text-xl text-green-100 leading-relaxed">
-                  Complete our comprehensive technical and financial courses and
-                  receive certificates that showcase your expertise and enhance
-                  your professional profile across industries.
+
+                <p className="mt-8 flex items-center gap-2 gv-hand text-2xl text-[color:var(--red)]">
+                  200+ children already learning with us
+                  <PaperPlane className="h-6 w-6 text-[color:var(--grass)]" />
                 </p>
               </div>
 
-              <div className="space-y-4 stagger-children">
-                {certificateFeatures.map((feature, index) => {
-                  const Icon = feature.icon;
-                  return (
-                    <div key={index} className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Icon className="w-4 h-4 text-white" />
-                      </div>
-                      <span className="text-green-100">{feature.text}</span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="pt-4">
-                <Link to="/courses">
-                  <Button
-                    size="lg"
-                    className="bg-white text-green-700 hover:bg-green-50 font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover-lift"
-                  >
-                    Start Your Journey
-                    <ArrowRight className="ml-2 w-5 h-5" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-
-            <div className="scroll-reveal-right">
-              <div className="relative">
-                <div className="absolute -inset-4 bg-gradient-to-r from-yellow-400 to-yellow-300 rounded-lg opacity-20 blur"></div>
-                <img
-                  src="/images/certify.jpg"
-                  alt="Growvest Academy Certificate"
-                  className="relative w-full max-w-lg mx-auto rounded-lg shadow-2xl border-4 border-white/20 transform hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute -top-4 -right-4 w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center animate-pulse shadow-lg">
-                  <Award className="w-8 h-8 text-green-700" />
+              {/* report card */}
+              <div className="gv-box gv-pop">
+                <div className="flex items-baseline justify-between border-b-2 border-dashed border-[color:var(--ink)] px-5 py-3">
+                  <span className="gv-display text-lg font-semibold">
+                    Progress Report
+                  </span>
+                  <span className="gv-eyebrow gv-t50">
+                    after 3 months
+                  </span>
                 </div>
+                <ul>
+                  {reportCard.map(([subject, grade], i) => (
+                    <li
+                      key={subject}
+                      className={`flex items-center justify-between px-5 py-3 ${
+                        i < reportCard.length - 1
+                          ? "border-b border-[color:var(--rule)]"
+                          : ""
+                      }`}
+                    >
+                      <span className="flex min-w-0 items-center gap-2.5">
+                        <Check
+                          className="h-4 w-4 shrink-0 text-[color:var(--grass)]"
+                          strokeWidth={3}
+                        />
+                        <span className="truncate font-medium">{subject}</span>
+                      </span>
+                      <span className="gv-hand shrink-0 pl-3 text-xl text-[color:var(--red)]">
+                        {grade}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="gv-hand px-5 py-3 text-right text-lg gv-t70">
+                  — signed, class teacher
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-16 bg-gray-50 scroll-reveal">
-        <div className="container-width section-padding">
-          <div className="text-center mb-16 scroll-reveal-up">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Why Choose{" "}
-              <span className="bg-gradient-to-r from-green-600 to-green-600 bg-clip-text text-transparent">
-                Growvest Academy
-              </span>
-              ?
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Comprehensive education in technology and finance designed for
-              modern professionals
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 stagger-children">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <Card
-                  key={index}
-                  className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-0 shadow-md hover-lift"
-                >
-                  <CardHeader>
-                    <div className="w-12 h-12 bg-gradient-to-r from-green-100 to-green-100 rounded-lg flex items-center justify-center mb-4 group-hover:from-green-200 group-hover:to-green-200 transition-colors duration-300">
-                      <Icon className="w-6 h-6 text-green-700" />
-                    </div>
-                    <CardTitle className="group-hover:text-green-700 transition-colors duration-300">
-                      {feature.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-gray-600">
-                      {feature.description}
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Learning Tools Section */}
-      <section className="py-16 bg-white scroll-reveal">
-        <div className="container-width section-padding">
-          <div className="text-center mb-16 scroll-reveal-up">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Smart Learning{" "}
-              <span className="bg-gradient-to-r from-green-600 to-green-600 bg-clip-text text-transparent">
-                Tools & Resources
-              </span>
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Access our comprehensive suite of learning tools for both
-              technical and financial education
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 stagger-children">
-            {[
-              {
-                icon: Code,
-                title: "Code Editor",
-                desc: "Built-in coding environment",
-              },
-              {
-                icon: BarChart3,
-                title: "Market Simulator",
-                desc: "Practice trading safely",
-              },
-              {
-                icon: Rocket,
-                title: "Project Builder",
-                desc: "Create real-world projects",
-              },
-              {
-                icon: LineChart,
-                title: "Portfolio Tracker",
-                desc: "Monitor investments",
-              },
-              {
-                icon: Trophy,
-                title: "Skill Tracker",
-                desc: "Monitor your progress",
-              },
-              {
-                icon: PiggyBank,
-                title: "SIP Calculator",
-                desc: "Plan your investments",
-              },
-              {
-                icon: Target,
-                title: "Career Path",
-                desc: "Personalized roadmap",
-              },
-              {
-                icon: Globe,
-                title: "Launch Pad",
-                desc: "Deploy your projects",
-              },
-            ].map((tool, index) => {
-              const Icon = tool.icon;
-              return (
-                <Card
-                  key={index}
-                  className="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 hover-lift"
-                >
-                  <CardContent className="p-4 lg:p-6 text-center">
-                    <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-r from-green-100 to-green-100 rounded-full flex items-center justify-center mx-auto mb-3 lg:mb-4 group-hover:from-green-200 group-hover:to-green-200 transition-colors duration-300">
-                      <Icon className="w-6 h-6 lg:w-8 lg:h-8 text-green-700" />
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-green-700 transition-colors duration-300 text-sm lg:text-base">
-                      {tool.title}
-                    </h3>
-                    <p className="text-gray-600 text-xs lg:text-sm">
-                      {tool.desc}
-                    </p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="py-16 bg-gray-50 scroll-reveal">
-        <div className="container-width section-padding">
-          <div className="text-center mb-16 scroll-reveal-up">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              What Our{" "}
-              <span className="bg-gradient-to-r from-green-600 to-green-600 bg-clip-text text-transparent">
-                Students
-              </span>{" "}
-              Say
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Real stories from people who have transformed their careers with
-              us
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-8 stagger-children">
-            {testimonials.map((testimonial, index) => (
-              <Card
-                key={index}
-                className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 hover-lift"
+      {/* ======================================================= TIMETABLE */}
+      <section className="border-b-2 border-[color:var(--ink)]">
+        <div className="mx-auto gv-reveal max-w-8xl px-5 py-14">
+          <SectionTitle index="§1" title="The weekly timetable" doodle={Sun} />
+          <div className="mt-8 grid gap-0 overflow-hidden border-[1.5px] border-[color:var(--ink)] sm:grid-cols-2">
+            {timetable.map((row, i) => (
+              <div
+                key={row.days}
+                className={`p-6 sm:p-8 ${
+                  i === 0 ? "sm:border-r-[1.5px] sm:border-[color:var(--ink)]" : ""
+                } ${i === 0 ? "border-b-[1.5px] border-[color:var(--ink)] sm:border-b-0" : ""}`}
               >
-                <CardContent className="p-8">
-                  <div className="mb-4">
-                    <p className="text-gray-700 italic leading-relaxed">
-                      "{testimonial.quote}"
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-100 to-green-100 flex items-center justify-center group-hover:from-green-200 group-hover:to-green-200 transition-colors duration-300">
-                      <Users className="w-6 h-6 text-green-700" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900 group-hover:text-green-700 transition-colors duration-300">
-                        {testimonial.name}
-                      </h4>
-                      <p className="text-gray-600 text-sm">
-                        {testimonial.title}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                <div className="flex items-center gap-3">
+                  <span className="gv-display text-2xl font-bold">{row.days}</span>
+                  <span className="border border-[color:var(--ink)] px-2 py-0.5 text-xs font-semibold uppercase tracking-wide">
+                    {row.kind}
+                  </span>
+                </div>
+                <p className="mt-3 gv-display text-xl text-[color:var(--red)]">
+                  {row.what}
+                </p>
+                <p className="mt-1 gv-t70">{row.detail}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-green-700 to-green-600 text-white relative overflow-hidden scroll-reveal">
-        <div className="absolute inset-0 bg-black/10 hero-parallax"></div>
-        <div className="container-width section-padding relative">
-          <div className="text-center max-w-3xl mx-auto scroll-reveal-up">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-6">
-              Ready to Transform Your Future?
-            </h2>
-            <p className="text-xl mb-8 text-green-100">
-              Join thousands of successful professionals who advanced their
-              careers with Growvest Academy
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/courses">
-                <Button
-                  size="lg"
-                  className="bg-white text-green-700 hover:bg-green-50 font-medium w-full sm:w-auto hover-lift"
+      {/* ======================================================== SYLLABUS */}
+      <section className="border-b-2 border-[color:var(--ink)] bg-[#f0fdf4]">
+        <div className="mx-auto gv-reveal max-w-8xl px-5 py-14">
+          <SectionTitle
+            index="§2"
+            title="Super Kids Foundation Program"
+            note="a 3-month course, in 3 levels"
+          />
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
+            {syllabus.map((level) => (
+              <div key={level.n} className="gv-box">
+                <div
+                  className="flex items-center gap-3 border-b-[1.5px] border-[color:var(--ink)] px-5 py-3"
+                  style={{ background: level.accent, color: "#fff" }}
                 >
-                  Start Free Course
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-              <Link to="/premium">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-white text-green-700 hover:bg-white hover:text-green-700 font-medium w-full sm:w-auto hover-lift"
+                  <span className="gv-display text-3xl font-extrabold leading-none">
+                    {level.n}
+                  </span>
+                  <div className="leading-tight">
+                    <span className="block text-[0.7rem] font-semibold uppercase tracking-widest opacity-80">
+                      Level {level.n}
+                    </span>
+                    <span className="gv-display text-xl font-bold">
+                      {level.title}
+                    </span>
+                  </div>
+                </div>
+                <ul className="px-5 py-2">
+                  {level.items.map((item, i) => (
+                    <li
+                      key={item}
+                      className={`flex items-center gap-2.5 py-2.5 ${
+                        i < level.items.length - 1
+                          ? "border-b border-dashed border-[color:var(--rule)]"
+                          : ""
+                      }`}
+                    >
+                      <Check
+                        className="h-4 w-4 shrink-0 text-[color:var(--ink)]"
+                        strokeWidth={3}
+                      />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ====================================================== BLACKBOARD */}
+      <section style={{ background: "var(--board)", color: "var(--chalk)" }}>
+        <div className="mx-auto gv-reveal max-w-8xl px-5 py-16">
+          <p className="gv-hand text-2xl gv-board-muted">
+            Today's lesson aim —
+          </p>
+          <h2 className="gv-display mt-1 text-3xl sm:text-4xl font-bold">
+            After 3 months, your child will…
+          </h2>
+
+          <ul className="mt-8 grid gap-x-10 gap-y-4 sm:grid-cols-2">
+            {afterThreeMonths.map((item) => (
+              <li key={item} className="flex items-start gap-3 text-lg">
+                <span className="gv-hand text-2xl leading-none text-[color:var(--star)]">
+                  ✓
+                </span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-10 border-t border-dashed gv-board-rule pt-6">
+            <span className="gv-hand text-2xl gv-board-muted">
+              our goal:
+            </span>{" "}
+            <span className="gv-display text-xl sm:text-2xl">
+              smart, confident, creative and future-ready children.
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* ==================================================== COMPETITIONS */}
+      <section className="border-b-2 border-[color:var(--ink)]">
+        <div className="mx-auto gv-reveal max-w-8xl px-5 py-14">
+          <SectionTitle
+            index="§3"
+            title="Learning beyond the classroom"
+            note="competitions we run for our students"
+            doodle={Smiley}
+          />
+
+          <div className="mt-8 grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+            <ul className="grid gap-x-8 sm:grid-cols-2">
+              {competitions.map((c, i) => (
+                <li
+                  key={c}
+                  className="flex items-baseline gap-3 border-b border-dashed border-[color:var(--rule)] py-3"
                 >
-                  Explore Premium
-                </Button>
-              </Link>
+                  <span className="gv-display text-sm font-bold text-[color:var(--red)]">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="text-lg">{c}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* gold-star achievement sticker */}
+            <div className="flex justify-center">
+              <div className="relative">
+                <div
+                  className="grid h-52 w-52 place-items-center rounded-full border-[1.5px] border-[color:var(--ink)] p-6 text-center"
+                  style={{ background: "var(--star)" }}
+                >
+                  <div>
+                    <Star
+                      className="mx-auto mb-2 h-8 w-8 text-[color:var(--ink)]"
+                      strokeWidth={2}
+                      fill="currentColor"
+                    />
+                    <p className="gv-display text-sm font-bold uppercase tracking-wide text-[color:var(--ink)]">
+                      Special Achievement
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-[color:var(--ink)]">
+                      First Spell Bee ever held in our town
+                    </p>
+                  </div>
+                </div>
+                <span className="gv-hand absolute -right-4 -top-3 -rotate-6 text-3xl text-[color:var(--red)]">
+                  a first!
+                </span>
+              </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==================================================== SCHOOL KITS */}
+      <section className="border-b-2 border-[color:var(--ink)] bg-[#f0fdf4]">
+        <div className="mx-auto gv-reveal max-w-8xl px-5 py-14">
+          <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+            <div>
+              <p className="gv-eyebrow">Also from Growvest</p>
+              <h2 className="gv-display mt-2 text-3xl font-bold">
+                The Growvest School Kit
+              </h2>
+              <p className="mt-2 max-w-lg gv-t70">
+                Every book, pencil and supply your child needs for the year — in
+                one box. Kits for LKG to 10th standard, from ₹199.
+              </p>
+            </div>
+            <Link
+              to="/store"
+              className="gv-btn gv-pop gv-press shrink-0"
+            >
+              Open the store <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ======================================================== MISSION */}
+      <section>
+        <div className="gv-reveal mx-auto max-w-3xl px-5 py-20 text-center">
+          <div className="mb-3 flex items-center justify-center gap-2 text-[color:var(--grass)]">
+            <Sparkle className="h-4 w-4" />
+            <StarDoodle className="h-6 w-6" />
+            <Sparkle className="h-4 w-4" />
+          </div>
+          <p className="gv-eyebrow">Our mission</p>
+          <p className="gv-display mt-4 text-3xl sm:text-4xl font-semibold leading-tight">
+            To build confident, creative and future-ready children — one
+            reading, one conversation, one small win at a time.
+          </p>
+          <p className="mt-6 gv-hand text-2xl text-[color:var(--red)]">
+            200+ students · 6+ competitions · endless growth
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
+            <Link to="/contact" className="gv-btn gv-btn-go gv-pop gv-press">
+              Enroll your child today
+            </Link>
+            <Link to="/about" className="gv-btn gv-btn-ghost gv-pop gv-press">
+              About Growvest
+            </Link>
           </div>
         </div>
       </section>
     </div>
   );
 };
+
+/* ---------- small pieces ---------------------------------------------- */
+
+function SectionTitle({ index, title, note, doodle: DoodleIcon }) {
+  return (
+    <div className="flex flex-wrap items-end gap-x-4 gap-y-1">
+      <span className="gv-display text-lg font-bold text-[color:var(--red)]">
+        {index}
+      </span>
+      <h2 className="gv-display text-3xl sm:text-4xl font-bold leading-none">
+        {title}
+      </h2>
+      {DoodleIcon && (
+        <DoodleIcon className="h-6 w-6 text-[color:var(--grass)]" aria-hidden />
+      )}
+      {note && <span className="gv-hand text-2xl gv-t50">{note}</span>}
+    </div>
+  );
+}
+
+/* ---------- hand-drawn kid doodles (decorative, aria-hidden) ----------- */
+
+function Sun({ className }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden>
+      <circle cx="24" cy="24" r="8.5" stroke="currentColor" strokeWidth="2.4" />
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => {
+        const a = (deg * Math.PI) / 180;
+        return (
+          <line
+            key={deg}
+            x1={24 + Math.cos(a) * 13}
+            y1={24 + Math.sin(a) * 13}
+            x2={24 + Math.cos(a) * 19}
+            y2={24 + Math.sin(a) * 19}
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
+function Sparkle({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M12 0c.7 5.8 2.4 9.5 12 12-9.6 2.5-11.3 6.2-12 12-.7-5.8-2.4-9.5-12-12C9.6 9.5 11.3 5.8 12 0Z" />
+    </svg>
+  );
+}
+
+function StarDoodle({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path
+        d="M12 3l2.5 6 6.5.4-5 4.2 1.7 6.3L12 16.8 6.3 19.9 8 13.6l-5-4.2 6.5-.4z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function Smiley({ className }) {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" className={className} aria-hidden>
+      <circle cx="16" cy="16" r="13" stroke="currentColor" strokeWidth="2" />
+      <circle cx="11.5" cy="13" r="1.6" fill="currentColor" />
+      <circle cx="20.5" cy="13" r="1.6" fill="currentColor" />
+      <path d="M10 19c1.8 2.6 10.2 2.6 12 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PaperPlane({ className }) {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" className={className} aria-hidden>
+      <path d="M29 3 3 14l10 3 3 10 4-8 6-16Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M13 17 29 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 export default Home;
