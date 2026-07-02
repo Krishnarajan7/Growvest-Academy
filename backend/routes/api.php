@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Admin\QuestionController;
 use App\Http\Controllers\Api\Student\StudentQuestionController;
 use App\Http\Controllers\Api\PublicMediaController;
+use App\Http\Controllers\Api\PublicProductController;
 
 
 Route::middleware('api')
@@ -17,6 +18,9 @@ Route::get('/super-kids/categories', [QuestionController::class, 'getSuperKidsCa
 Route::prefix('public')->group(function () {
     Route::get('/media', [PublicMediaController::class, 'index']);
     Route::get('/media/{media}', [PublicMediaController::class, 'show']);
+
+    Route::get('/products', [PublicProductController::class, 'index']);
+    Route::get('/products/{slug}', [PublicProductController::class, 'show']);
 });
 Route::middleware('auth:sanctum')->group(function () {
     Route::get(

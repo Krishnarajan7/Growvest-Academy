@@ -1,0 +1,61 @@
+# ---------------------------------------------------------------------------
+# Security hardening for the Laravel application root.
+#
+# The web server document root SHOULD point at the ./public directory.
+# This file is a defense-in-depth fallback for hosts (e.g. shared cPanel)
+# where the document root is the project root and the framework files,
+# including the .env, would otherwise be served as static files.
+#
+# Effect: deny direct HTTP access to dotfiles and sensitive project files,
+# and forward everything else into Laravel's public/ front controller.
+# ---------------------------------------------------------------------------
+
+# 1) Block dotfiles (.env, .env.example, .git, .htaccess, etc.)
+<IfModule mod_authz_core.c>
+    # Apache 2.4+
+    <FilesMatch "^\.">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+<IfModule !mod_authz_core.c>
+    # Apache 2.2
+    <FilesMatch "^\.">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>
+
+# 2) Block sensitive project files by name/extension
+<FilesMatch "(?i)(^\.env.*|composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml|\.gitignore|\.gitattributes|README\.md|LICENSE|\.(log|sql|sqlite|bak|config|ini|sh|lock|yml|yaml)$)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# 3) Never list directory contents
+Options -Indexes
+
+# 4) Block direct access to framework internals
+RedirectMatch 403 (?i)^/(\.git|\.env|app|bootstrap|config|database|resources|routes|storage|tests|vendor)(/|$)
+
+# 5) Route all remaining requests through Laravel's public front controller
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # If the document root IS the project root, send requests into public/.
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteCond %{DOCUMENT_ROOT}/public -d
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f [OR]
+    RewriteCond %{REQUEST_URI} ^/$
+    RewriteRule ^(.*)$ public/$1 [L]
+
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteCond %{DOCUMENT_ROOT}/public -d
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} !-f
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} !-d
+    RewriteRule ^ public/index.php [L]
+</IfModule>

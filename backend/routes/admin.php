@@ -24,8 +24,11 @@ use App\Http\Controllers\Api\Admin\AgeGroupController;
 // Tests
 use App\Http\Controllers\Api\Admin\TestController;
 
-// 
+//
 use App\Http\Controllers\Api\Admin\StudentAnalyticsController;
+
+// PRODUCTS (School Kit Store)
+use App\Http\Controllers\Api\Admin\ProductController;
 
 
 
@@ -135,6 +138,17 @@ Route::prefix('students')->middleware(['auth:admin'])->group(function () {
     Route::post('/bulk-delete', [MediaController::class, 'bulkDelete']);
 });
 
+
+    // Products (School Kit Store)
+    Route::prefix('products')->group(function () {
+        Route::get('/', [ProductController::class, 'index']);
+        Route::post('/', [ProductController::class, 'store']);
+        Route::get('/{id}', [ProductController::class, 'show']);
+        Route::put('/{id}', [ProductController::class, 'update']);
+        Route::post('/{id}', [ProductController::class, 'update']); // multipart PUT fallback (FormData + _method)
+        Route::delete('/{id}', [ProductController::class, 'destroy']);
+        Route::post('/{id}/toggle-status', [ProductController::class, 'toggleStatus']);
+    });
 
     // Questions
     Route::prefix('questions')->group(function () {
